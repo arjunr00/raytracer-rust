@@ -1,5 +1,5 @@
 [package]
-name = "raytracer-rust"
+name = "raytracer"
 version = "0.1.0"
 authors = ["Arjun Raghavan <arjun.raghavan.2k@gmail.com>"]
 edition = "2018"
