@@ -1,7 +1,8 @@
-use std::{ ops };
+use std::{ ops::{self}, cmp };
+use super::math;
 
 /// A struct for a 3-dimensional floating-point vector
-#[derive(Debug, PartialEq)]
+#[derive(Debug)]
 pub struct Vec3 (f64, f64, f64);
 // Useful aliases
 pub use Vec3 as ColorRGB;
@@ -41,7 +42,40 @@ impl Vec3 {
     }
 }
 
-impl ops::Add for &Vec3 {
+impl cmp::PartialEq for Vec3 {
+    // Explicitly define equality to account for floating-point imprecision
+    fn eq(&self, other: &Vec3) -> bool {
+        math::f_eq(self.0, other.0)
+        && math::f_eq(self.1, other.1)
+        && math::f_eq(self.2, other.2)
+    }
+}
+
+impl ops::Add<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, other: Vec3) -> Vec3 {
+        Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl ops::Add<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn add(self, other: Vec3) -> Vec3 {
+        Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl ops::Add<&Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn add(self, other: &Vec3) -> Vec3 {
+        Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl ops::Add<&Vec3> for &Vec3 {
     type Output = Vec3;
 
     fn add(self, other: &Vec3) -> Vec3 {
@@ -55,11 +89,27 @@ impl ops::AddAssign for Vec3 {
     }
 }
 
+impl ops::Mul<f64> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: f64) -> Vec3 {
+        Vec3::new(self.0 * other, self.1 * other, self.2 * other)
+    }
+}
+
 impl ops::Mul<f64> for &Vec3 {
     type Output = Vec3;
 
     fn mul(self, other: f64) -> Vec3 {
         Vec3::new(self.0 * other, self.1 * other, self.2 * other)
+    }
+}
+
+impl ops::Mul<Vec3> for f64 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3::new(other.0 * self, other.1 * self, other.2 * self)
     }
 }
 
@@ -77,7 +127,31 @@ impl ops::MulAssign<f64> for Vec3 {
     }
 }
 
-impl ops::Sub for &Vec3 {
+impl ops::Sub<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Vec3 {
+        self + (-1.0 * other)
+    }
+}
+
+impl ops::Sub<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: Vec3) -> Vec3 {
+        self + (-1.0 * other)
+    }
+}
+
+impl ops::Sub<&Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn sub(self, other: &Vec3) -> Vec3 {
+        self + (-1.0 * other)
+    }
+}
+
+impl ops::Sub<&Vec3> for &Vec3 {
     type Output = Vec3;
 
     fn sub(self, other: &Vec3) -> Vec3 {
