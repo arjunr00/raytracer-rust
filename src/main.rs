@@ -29,7 +29,10 @@ fn main() {
             let u = (j as f64) / f64::from(OUT_WIDTH - 1);
             let v = (i as f64) / f64::from(OUT_HEIGHT - 1);
 
-            let ray_dir = &top_left + u * &i_vec - v * &j_vec;
+            let ray_dir =
+                &top_left
+                + u * (2.0 * vp_x_max * &i_vec)
+                - v * (2.0 * vp_y_max * &j_vec);
             let r = Ray::new(&origin, &ray_dir);
 
             pixels[i as usize].push(r.get_color());
