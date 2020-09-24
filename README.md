@@ -20,4 +20,4 @@ Who would've guessed?
 ## What it looks like
 
 This is the image produced by redirecting the output of `src/main.rs`:
-![raytracer](https://user-images.githubusercontent.com/30734384/94066701-d48d5d00-fdba-11ea-98bb-ac4dc072abaa.png)
+![raytracer](https://user-images.githubusercontent.com/30734384/94088073-82a9fe80-fddd-11ea-86f9-8c16e8dfa9b5.png)
