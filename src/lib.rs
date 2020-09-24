@@ -1,15 +1,26 @@
+use vec::ColorRGB;
+
+pub mod math;
+pub mod ray;
+pub mod vec;
+
+/// Creates a String containing a PPM representation of a single pixel
+pub fn write_pixel(pixel: &ColorRGB) -> String {
+    format!("{} {} {}\n",
+        (255.999 * pixel[vec::Color::R]) as u32,
+        (255.999 * pixel[vec::Color::G]) as u32,
+        (255.999 * pixel[vec::Color::B]) as u32
+    )
+}
+
 /// Creates a String containing a PPM representation of the image described by `pixels`
-pub fn create_ppm(pixels: &Vec<Vec<vec::ColorRGB>>, width: u32, height: u32, max_colors: u32) -> String {
+pub fn create_ppm(pixels: &Vec<Vec<ColorRGB>>, width: u32, height: u32, max_colors: u32) -> String {
     let mut ppm = format!("P3\n{} {}\n{}\n", width, height, max_colors);
     let total_pixels = width * height;
 
     for (i, row) in pixels.iter().enumerate() {
         for (j, pixel) in row.iter().enumerate() {
-            let pixel_str = format!("{} {} {}\n",
-                (255.999 * pixel[vec::Color::R]) as u32,
-                (255.999 * pixel[vec::Color::G]) as u32,
-                (255.999 * pixel[vec::Color::B]) as u32);
-            ppm.push_str(&pixel_str);
+            ppm.push_str(&write_pixel(pixel));
 
             let pixel_num = j + 1 + (i * width as usize);
             eprint!("\r{}/{} pixels rendered", pixel_num, total_pixels);
@@ -19,8 +30,6 @@ pub fn create_ppm(pixels: &Vec<Vec<vec::ColorRGB>>, width: u32, height: u32, max
     eprintln!("\nDone.");
     ppm
 }
-
-pub mod vec;
 
 #[cfg(test)]
 mod tests {
@@ -33,7 +42,7 @@ mod tests {
         let width = 16;
         let height = 16;
         let max_colors = 255;
-        let mut pixels: Vec<Vec<vec::ColorRGB>> = vec![];
+        let mut pixels: Vec<Vec<ColorRGB>> = vec![];
 
         for i in 0..height {
             pixels.push(vec![]);
@@ -42,7 +51,7 @@ mod tests {
                 let g = (j as f64) / f64::from(height - 1);
                 let b = 0.25;
 
-                let pixel = vec::ColorRGB::new(
+                let pixel = ColorRGB::new(
                     f64::min(1.0, f64::max(0.0, r)),
                     f64::min(1.0, f64::max(0.0, g)),
                     f64::min(1.0, f64::max(0.0, b))
