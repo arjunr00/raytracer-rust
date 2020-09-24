@@ -1,4 +1,5 @@
 use std::{ ops::{self}, cmp };
+
 use super::math;
 use super::geom::{ Hittable, HittableGroup };
 
@@ -256,15 +257,20 @@ impl Ray {
         match world.check_hit(self, 0.0, f64::INFINITY) {
             None => {
                 let t = 0.5 * (1.0 - self.dir[Coord::Y]);
-                let white = ColorRGB::new(1.0, 1.0, 1.0);
-                let skyblue = ColorRGB::new(0.5, 0.7, 1.0);
-                math::lerp(skyblue, white, t)
+                math::lerp(colors::SKYBLUE, colors::WHITE, t)
             },
             Some(hit) => {
                 0.5 * (hit.normal + ColorRGB::new(1.0, 1.0, 1.0))
             }
         }
     }
+}
+
+pub mod colors {
+    use super::ColorRGB;
+
+    pub const SKYBLUE: ColorRGB = ColorRGB(0.5, 0.7, 1.0);
+    pub const WHITE: ColorRGB = ColorRGB(1.0, 1.0, 1.0);
 }
 
 #[cfg(test)]
