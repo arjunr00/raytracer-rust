@@ -358,4 +358,15 @@ mod tests {
         let ray = Ray::new(&Point3::new(0.0, 1.0, 2.0), &Vec3::new(3.0, 4.0, 0.0));
         assert_eq!(ray.at(5.0), Vec3::new(3.0, 5.0, 2.0));
     }
+
+    #[test]
+    fn sphere_ray_color() {
+        use super::super::geom::Sphere;
+
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let ray = Ray::new(&Point3::new(0.0, 0.0, 0.0), &-Vec3::K);
+        let front_color = ray.get_color(&vec![&sphere]);
+
+        assert_eq!(front_color, Vec3::new(0.5, 0.5, 1.0));
+    }
 }

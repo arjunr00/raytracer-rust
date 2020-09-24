@@ -70,3 +70,24 @@ impl Hittable for Sphere {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn sphere_hit() {
+        let sphere = Sphere::new(Point3::new(0.0, 0.3, 0.0), 0.5);
+        let ray = Ray::new(&Vec3::O, &-Vec3::J);
+        assert!(sphere.check_hit(&ray, 0.0, f64::INFINITY).is_some(),
+            "Ray should have hit sphere but didn't.")
+    }
+
+    #[test]
+    fn sphere_not_hit() {
+        let sphere = Sphere::new(Point3::new(0.0, 0.6, 0.0), 0.5);
+        let ray = Ray::new(&Vec3::O, &-Vec3::J);
+        assert!(sphere.check_hit(&ray, 0.0, f64::INFINITY).is_none(),
+            "Ray shouldn't have hit sphere but did.")
+    }
+}

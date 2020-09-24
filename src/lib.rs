@@ -65,7 +65,7 @@ mod tests {
         let height: u32 = 16;
         let max_colors = 255;
 
-        let output = create_ppm(width, height, max_colors);
+        let output = create_ppm(&vec![], width, height, max_colors);
 
         assert_eq!(output, expected_output);
     }
