@@ -1,5 +1,6 @@
 use std::{ ops::{self}, cmp };
 use super::math;
+use super::geom::{ Hittable, HittableGroup };
 
 /// A struct for a 3-dimensional floating-point vector
 #[derive(Debug)]
@@ -251,30 +252,16 @@ impl Ray {
         &self.origin + &(t * &self.dir)
     }
 
-    pub fn hit_sphere(&self, center: &Point3, radius: f64) -> Option<f64> {
-        let vec_to_center = &self.origin - center;
-        let center_dot_self = self.dir.dot(&vec_to_center);
-        let discriminant =
-            center_dot_self.powi(2)
-            - (vec_to_center.norm().powi(2) - radius.powi(2));
-
-        if discriminant < 0.0 { None }
-        else {
-            Some((-center_dot_self - discriminant.sqrt()) / (self.dir.norm().powi(2)))
-        }
-    }
-
-    pub fn get_color(&self) -> ColorRGB {
-        match self.hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5) {
+    pub fn get_color(&self, world: &HittableGroup) -> ColorRGB {
+        match world.check_hit(self, 0.0, f64::INFINITY) {
             None => {
                 let t = 0.5 * (1.0 - self.dir[Coord::Y]);
                 let white = ColorRGB::new(1.0, 1.0, 1.0);
                 let skyblue = ColorRGB::new(0.5, 0.7, 1.0);
                 math::lerp(skyblue, white, t)
             },
-            Some(t) => {
-                let normal: Vec3 = (self.at(t) + Vec3::K).unit();
-                0.5 * (normal + Vec3::new(1.0, 1.0, 1.0))
+            Some(hit) => {
+                0.5 * (hit.normal + ColorRGB::new(1.0, 1.0, 1.0))
             }
         }
     }

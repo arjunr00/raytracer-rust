@@ -1,7 +1,16 @@
+use raytracer::geom::{ HittableGroup, Sphere };
+use raytracer::vec::{ Point3 };
+
 const OUT_WIDTH:  u32 = 640;
 const OUT_HEIGHT: u32 = 480;
 const MAX_COLORS: u32 = 255;
 
 fn main() {
-    print!("{}", raytracer::create_ppm(OUT_WIDTH, OUT_HEIGHT, MAX_COLORS));
+    let mut world: HittableGroup = vec![];
+    let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+    let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0);
+    world.push(&sphere);
+    world.push(&ground);
+
+    print!("{}", raytracer::create_ppm(&world, OUT_WIDTH, OUT_HEIGHT, MAX_COLORS));
 }
