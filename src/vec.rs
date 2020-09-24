@@ -8,6 +8,13 @@ pub struct Vec3 (f64, f64, f64);
 pub use Vec3 as ColorRGB;
 pub use Vec3 as Point3;
 
+/// Describes a ray of the form r(t) = origin + t*dir
+#[derive(Debug)]
+pub struct Ray {
+    pub origin: Point3,
+    pub dir: Vec3
+}
+
 pub enum Color {
     R, G, B
 }
@@ -17,15 +24,20 @@ pub enum Coord {
 }
 
 impl Vec3 {
+    pub const I: Vec3 = Vec3 ( 1.0, 0.0, 0.0 );
+    pub const J: Vec3 = Vec3 ( 0.0, 1.0, 0.0 );
+    pub const K: Vec3 = Vec3 ( 0.0, 0.0, 1.0 );
+    pub const O: Vec3 = Vec3 ( 0.0, 0.0, 0.0 );
+
     pub fn new(e1: f64, e2: f64, e3: f64) -> Vec3 {
         Vec3(e1, e2, e3)
     }
 
-    pub fn dot(&self, other: Vec3) -> f64 {
+    pub fn dot(&self, other: &Vec3) -> f64 {
         self.0 * other.0 + self.1 * other.1 + self.2 * other.2
     }
 
-    pub fn cross(&self, other: Vec3) -> Vec3 {
+    pub fn cross(&self, other: &Vec3) -> Vec3 {
         Vec3::new(
             self.1 * other.2 - self.2 * other.1,
             self.2 * other.0 - self.0 * other.2,
@@ -165,6 +177,22 @@ impl ops::SubAssign for Vec3 {
     }
 }
 
+impl ops::Neg for Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Vec3 {
+        self * -1.0
+    }
+}
+
+impl ops::Neg for &Vec3 {
+    type Output = Vec3;
+
+    fn neg(self) -> Vec3 {
+        self * -1.0
+    }
+}
+
 impl ops::Index<Color> for Vec3 {
     type Output = f64;
 
@@ -205,6 +233,49 @@ impl ops::IndexMut<Coord> for Vec3 {
             Coord::X => &mut self.0,
             Coord::Y => &mut self.1,
             Coord::Z => &mut self.2
+        }
+    }
+}
+
+impl Ray {
+    pub fn new(origin: &Point3, dir: &Vec3) -> Ray {
+        Ray {
+            origin: Point3::new(
+                        origin[Coord::X], origin[Coord::Y], origin[Coord::Z]
+                    ),
+            dir: dir.unit()
+        }
+    }
+
+    pub fn at(&self, t: f64) -> Point3 {
+        &self.origin + &(t * &self.dir)
+    }
+
+    pub fn hit_sphere(&self, center: &Point3, radius: f64) -> Option<f64> {
+        let vec_to_center = &self.origin - center;
+        let center_dot_self = self.dir.dot(&vec_to_center);
+        let discriminant =
+            center_dot_self.powi(2)
+            - (vec_to_center.norm().powi(2) - radius.powi(2));
+
+        if discriminant < 0.0 { None }
+        else {
+            Some((-center_dot_self - discriminant.sqrt()) / (self.dir.norm().powi(2)))
+        }
+    }
+
+    pub fn get_color(&self) -> ColorRGB {
+        match self.hit_sphere(&Point3::new(0.0, 0.0, -1.0), 0.5) {
+            None => {
+                let t = 0.5 * (1.0 - self.dir[Coord::Y]);
+                let white = ColorRGB::new(1.0, 1.0, 1.0);
+                let skyblue = ColorRGB::new(0.5, 0.7, 1.0);
+                math::lerp(skyblue, white, t)
+            },
+            Some(t) => {
+                let normal: Vec3 = (self.at(t) + Vec3::K).unit();
+                0.5 * (normal + Vec3::new(1.0, 1.0, 1.0))
+            }
         }
     }
 }
@@ -293,5 +364,11 @@ mod tests {
         assert_eq!(pt[Coord::Z], 2.0);
         pt[Coord::Y] = 3.0;
         assert_eq!(pt[Coord::Y], 3.0);
+    }
+
+    #[test]
+    fn ray_at_t() {
+        let ray = Ray::new(&Point3::new(0.0, 1.0, 2.0), &Vec3::new(3.0, 4.0, 0.0));
+        assert_eq!(ray.at(5.0), Vec3::new(3.0, 5.0, 2.0));
     }
 }
