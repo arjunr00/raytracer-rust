@@ -24,14 +24,14 @@ fn main() {
 
     let mut world: HittableGroup = vec![];
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &mat_dif_soft_blue);
-    let sphere1 = Sphere::new(Point3::new(0.6, -0.2, -1.0), 0.3, &mat_dif_soft_red);
-    let sphere2 = Sphere::new(Point3::new(-0.27, -0.1, -0.8), 0.4, &mat_glass_white);
-    let sphere3 = Sphere::new(Point3::new(0.0, 0.0, -1.5), 0.5, &mat_metal_rough_soft_green);
+    let red_ball = Sphere::new(Point3::new(0.6, -0.2, -1.0), 0.3, &mat_dif_soft_red);
+    let glass_ball = Sphere::new(Point3::new(-0.27, -0.1, -0.8), 0.4, &mat_glass_white);
+    let green_metal_ball = Sphere::new(Point3::new(0.0, 0.0, -1.5), 0.5, &mat_metal_rough_soft_green);
 
     world.push(&ground);
-    world.push(&sphere1);
-    world.push(&sphere2);
-    world.push(&sphere3);
+    world.push(&red_ball);
+    world.push(&glass_ball);
+    world.push(&green_metal_ball);
 
     let camera =
         Camera::new(Point3::new(0.4, -0.4, 0.8), &Point3::new(0.0, 0.0, -1.0),
