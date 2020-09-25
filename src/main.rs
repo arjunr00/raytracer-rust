@@ -5,11 +5,11 @@ use raytracer::{
     vec::{ ColorRGB, Point3 }
 };
 
-const OUT_WIDTH:  u32 = 320;
-const OUT_HEIGHT: u32 = 240;
+const OUT_WIDTH:  u32 = 640;
+const OUT_HEIGHT: u32 = 480;
 const SAMPLES:    u32 = 100;
 const MAX_DEPTH:  u32 = 50;
-const FOV_DEG:    f64 = 100.0;
+const FOV_DEG:    f64 = 60.0;
 
 fn main() {
     let config = raytracer::ImageConfig {
@@ -34,7 +34,7 @@ fn main() {
     world.push(&sphere3);
 
     let camera =
-        Camera::new(Point3::new(1.0, -0.4, 1.0), &Point3::new(0.0, 0.0, -1.0),
+        Camera::new(Point3::new(0.4, -0.4, 0.8), &Point3::new(0.0, 0.0, -1.0),
             FOV_DEG, OUT_WIDTH, OUT_HEIGHT);
     print!("{}", raytracer::create_ppm(&world, &camera, &config));
 
