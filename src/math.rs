@@ -35,6 +35,12 @@ pub fn rand_f64(rand: &mut Rand) -> f64 {
     rand.dist.sample(&mut rand.rng)
 }
 
+/// Calculate a Schlick approximation for the specular reflection coefficient
+pub fn schlick(cos_theta_i: f64, index_i: f64, index_r: f64) -> f64 {
+    let r_0 = ((index_i - index_r) / (index_i + index_r)).powi(2);
+    r_0 + (1.0 - r_0) * (1.0 - cos_theta_i).powi(5)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;

@@ -5,6 +5,7 @@ pub struct Hit<'a> {
     pub point: Point3,
     pub normal: Vec3,
     pub t: f64,
+    pub outer: bool,
     pub material: &'a dyn Material
 }
 
@@ -59,25 +60,23 @@ impl Hittable for Sphere<'_> {
         if t1 < t_max && t1 > t_min {
             let normal = (ray.at(t1) - &self.center) * (1.0/self.radius);
             let outer = ray.dir.dot(&normal) < 0.0;
-            if outer {
-                return Some(Hit {
-                    point: ray.at(t1),
-                    normal: normal.unit(),
-                    t: t1,
-                    material: self.material
-                });
-            }
+            return Some(Hit {
+                point: ray.at(t1),
+                normal: if outer { normal.unit() } else { -normal.unit() },
+                t: t1,
+                material: self.material,
+                outer
+            });
         } else if t2 < t_max && t2 > t_min {
             let normal = (ray.at(t2) - &self.center) * (1.0/self.radius);
             let outer = ray.dir.dot(&normal) < 0.0;
-            if outer {
-                return Some(Hit {
-                    point: ray.at(t2),
-                    normal: normal.unit(),
-                    t: t2,
-                    material: self.material
-                });
-            }
+            return Some(Hit {
+                point: ray.at(t2),
+                normal: if outer { normal.unit() } else { -normal.unit() },
+                t: t2,
+                material: self.material,
+                outer
+            });
         }
 
         None

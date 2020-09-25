@@ -48,7 +48,7 @@ impl Ray {
                 math::lerp(colors::SKYBLUE, colors::WHITE, t)
             },
             Some(hit) => {
-                match hit.material.scatter(self, &hit.point, &hit.normal, rand) {
+                match hit.material.scatter(self, &hit, rand) {
                     None => colors::BLACK,
                     Some(scattered) => {
                         hit.material.attenuation() * scattered.get_color(&world, depth-1, rand)
@@ -89,8 +89,25 @@ impl Vec3 {
         (1.0/self.norm()) * self
     }
 
-    pub fn reflect(&self, n: &Vec3) -> Vec3 {
-        self - 2.0 * self.dot(n) * n
+    pub fn reflect(&self, normal: &Vec3) -> Vec3 {
+        self - 2.0 * self.dot(normal) * normal
+    }
+
+    pub fn refract(&self, normal: &Vec3, index_i: f64, index_r: f64, rand: &mut math::Rand) -> Vec3 {
+        let self_unit = self.unit();
+        let sin_theta_i = (self_unit.cross(normal)).norm();
+        let cos_theta_i = f64::abs(self_unit.dot(normal));
+        // Total internal reflection
+        if index_i >= index_r && sin_theta_i > index_r/index_i
+            || rand.dist.sample(&mut rand.rng) < math::schlick(cos_theta_i, index_i, index_r)
+        {
+            return self.reflect(normal);
+        }
+
+
+        let theta_r = (sin_theta_i * index_i / index_r).asin();
+        (-theta_r.cos()) * normal // Parallel to normal
+            + (index_i / index_r) * (self + self_unit.dot(normal) * normal) // Perp to normal
     }
 
     pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
