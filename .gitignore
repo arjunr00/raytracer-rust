@@ -1,5 +1,6 @@
 ## Build files
-/target
+target/
+frames/
 *.ppm
 
 ## Temp files
