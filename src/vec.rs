@@ -73,6 +73,39 @@ impl cmp::PartialEq for Vec3 {
     }
 }
 
+impl Ray {
+    pub fn new(origin: &Point3, dir: &Vec3) -> Ray {
+        Ray {
+            origin: Point3::new(
+                        origin[Coord::X], origin[Coord::Y], origin[Coord::Z]
+                    ),
+            dir: dir.unit()
+        }
+    }
+
+    pub fn at(&self, t: f64) -> Point3 {
+        &self.origin + &(t * &self.dir)
+    }
+
+    pub fn get_color(&self, world: &HittableGroup, depth: u32, rand: &mut math::Rand) -> ColorRGB {
+        if depth <= 0 { return colors::BLACK; }
+        match world.is_hit(self, 0.001, f64::INFINITY) {
+            None => {
+                let t = 0.5 * (1.0 - self.dir[Coord::Y]);
+                math::lerp(colors::SKYBLUE, colors::WHITE, t)
+            },
+            Some(hit) => {
+                match hit.material.scatter(self, &hit.point, &hit.normal, rand) {
+                    None => colors::BLACK,
+                    Some(scattered) => {
+                        hit.material.attenuation() * scattered.get_color(&world, depth-1, rand)
+                    }
+                }
+            }
+        }
+    }
+}
+
 impl ops::Add<Vec3> for Vec3 {
     type Output = Vec3;
 
@@ -108,6 +141,44 @@ impl ops::Add<&Vec3> for &Vec3 {
 impl ops::AddAssign for Vec3 {
     fn add_assign(&mut self, other: Vec3) {
         *self = Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl ops::Mul<Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
+impl ops::Mul<Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: Vec3) -> Vec3 {
+        Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
+impl ops::Mul<&Vec3> for Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: &Vec3) -> Vec3 {
+        Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
+impl ops::Mul<&Vec3> for &Vec3 {
+    type Output = Vec3;
+
+    fn mul(self, other: &Vec3) -> Vec3 {
+        Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
+impl ops::MulAssign<Vec3> for Vec3 {
+    fn mul_assign(&mut self, other: Vec3) {
+        *self = Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
 }
 
@@ -243,35 +314,6 @@ impl ops::IndexMut<Coord> for Vec3 {
             Coord::X => &mut self.0,
             Coord::Y => &mut self.1,
             Coord::Z => &mut self.2
-        }
-    }
-}
-
-impl Ray {
-    pub fn new(origin: &Point3, dir: &Vec3) -> Ray {
-        Ray {
-            origin: Point3::new(
-                        origin[Coord::X], origin[Coord::Y], origin[Coord::Z]
-                    ),
-            dir: dir.unit()
-        }
-    }
-
-    pub fn at(&self, t: f64) -> Point3 {
-        &self.origin + &(t * &self.dir)
-    }
-
-    pub fn get_color(&self, world: &HittableGroup, depth: u32, rand: &mut math::Rand) -> ColorRGB {
-        if depth <= 0 { return colors::BLACK; }
-        match world.is_hit(self, 0.001, f64::INFINITY) {
-            None => {
-                let t = 0.5 * (1.0 - self.dir[Coord::Y]);
-                math::lerp(colors::SKYBLUE, colors::WHITE, t)
-            },
-            Some(hit) => {
-                let target = &hit.point + &hit.normal + Vec3::random_unit(rand);
-                0.5 * Ray::new(&hit.point, &(target - &hit.point)).get_color(&world, depth-1, rand)
-            }
         }
     }
 }

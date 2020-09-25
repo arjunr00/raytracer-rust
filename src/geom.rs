@@ -1,9 +1,11 @@
+use super::material::Material;
 use super::vec::{ Point3, Ray, Vec3 };
 
-pub struct Hit {
+pub struct Hit<'a> {
     pub point: Point3,
     pub normal: Vec3,
-    pub t: f64
+    pub t: f64,
+    pub material: &'a dyn Material
 }
 
 pub trait Hittable {
@@ -12,9 +14,10 @@ pub trait Hittable {
 
 pub type HittableGroup<'a> = Vec<&'a dyn Hittable>;
 
-pub struct Sphere {
+pub struct Sphere<'a> {
     center: Point3,
-    radius: f64
+    radius: f64,
+    material: &'a dyn Material
 }
 
 impl Hittable for HittableGroup<'_> {
@@ -33,13 +36,13 @@ impl Hittable for HittableGroup<'_> {
     }
 }
 
-impl Sphere {
-    pub fn new(center: Point3, radius: f64) -> Sphere {
-        Sphere { center, radius }
+impl Sphere<'_> {
+    pub fn new(center: Point3, radius: f64, material: &dyn Material) -> Sphere {
+        Sphere { center, radius, material }
     }
 }
 
-impl Hittable for Sphere {
+impl Hittable for Sphere<'_> {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         let vec_to_center = &ray.origin - &self.center;
         let center_dot_self = ray.dir.dot(&vec_to_center);
@@ -60,7 +63,8 @@ impl Hittable for Sphere {
                 return Some(Hit {
                     point: ray.at(t1),
                     normal: normal.unit(),
-                    t: 0.0
+                    t: 0.0,
+                    material: self.material
                 });
             }
         } else if t2 < t_max && t2 > t_min {
@@ -70,7 +74,8 @@ impl Hittable for Sphere {
                 return Some(Hit {
                     point: ray.at(t2),
                     normal: normal.unit(),
-                    t: 0.0
+                    t: 0.0,
+                    material: self.material
                 });
             }
         }

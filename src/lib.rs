@@ -7,6 +7,7 @@ use vec::ColorRGB;
 
 pub mod camera;
 pub mod geom;
+pub mod material;
 pub mod math;
 pub mod vec;
 pub use vec::colors;
