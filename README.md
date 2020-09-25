@@ -21,4 +21,4 @@ Who would've guessed?
 
 This is the image produced by redirecting the output of `src/main.rs`:
 
-![raytracer](https://user-images.githubusercontent.com/30734384/94212407-19d88a00-fea2-11ea-94bf-9addf9817b80.png)
+![raytracer](https://user-images.githubusercontent.com/30734384/94214990-2ad8c980-fea9-11ea-89eb-3c33dfb9432b.png)

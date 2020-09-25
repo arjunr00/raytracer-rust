@@ -2,8 +2,8 @@ use raytracer::geom::{ HittableGroup, Sphere };
 use raytracer::material::{ DiffuseLambert };
 use raytracer::vec::{ ColorRGB, Point3 };
 
-const OUT_WIDTH:  u32 = 320;
-const OUT_HEIGHT: u32 = 240;
+const OUT_WIDTH:  u32 = 640;
+const OUT_HEIGHT: u32 = 480;
 const SAMPLES:    u32 = 100;
 const MAX_DEPTH:  u32 = 50;
 
