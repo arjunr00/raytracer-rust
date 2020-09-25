@@ -10,7 +10,7 @@ pub struct DiffuseLambert {
     albedo: ColorRGB
 }
 
-pub struct Metal {
+pub struct Reflective {
     albedo: ColorRGB,
     roughness: f64
 }
@@ -33,16 +33,16 @@ impl Material for DiffuseLambert {
     }
 }
 
-impl Metal {
-    pub fn new(albedo: ColorRGB, roughness: f64) -> Metal {
-        Metal {
+impl Reflective {
+    pub fn new(albedo: ColorRGB, roughness: f64) -> Reflective {
+        Reflective {
             albedo,
             roughness: f_clamp(roughness, 0.0, 1.0)
         }
     }
 }
 
-impl Material for Metal {
+impl Material for Reflective {
     fn scatter(&self, in_ray: &Ray, point: &Point3, normal: &Vec3, rand: &mut Rand) -> Option<Ray> {
         let reflection_dir = in_ray.dir.reflect(normal);
         let scattered = Ray::new(point, &(reflection_dir + self.roughness * Vec3::random_unit(rand)));
