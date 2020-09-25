@@ -19,6 +19,8 @@ Who would've guessed?
 
 ## What it looks like
 
-640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~8 seconds and looks like this:
+640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~8 seconds:
 
-![raytracer](https://user-images.githubusercontent.com/30734384/94217642-822e6800-feb0-11ea-8626-d08a9a8fb54d.png)
+![raytracer](https://user-images.githubusercontent.com/30734384/94311973-1c8eba00-ff4a-11ea-9f90-04cd8413a833.png)
+
+From left to right: transparent ball with refractive index of 1.52, reflective ball with roughness of 0.6, diffuse ball.
