@@ -6,6 +6,11 @@ use std::ops;
 
 const FLOAT_THRESHOLD: f64 = 0.0001;
 
+pub struct Rand {
+    pub dist: Uniform<f64>,
+    pub rng: ThreadRng
+}
+
 /// Evaluate the equality of two floats to within a threshold value of FLOAT_THRESHOLD
 pub fn f_eq(lhs: f64, rhs: f64) -> bool {
     (lhs - rhs).abs() <= FLOAT_THRESHOLD
@@ -26,8 +31,8 @@ pub fn f_clamp(val: f64, min: f64, max: f64) -> f64 {
 }
 
 /// Generate a random float given a distribution
-pub fn rand_f64(dist: &Uniform<f64>, rng: &mut ThreadRng) -> f64 {
-    dist.sample(rng)
+pub fn rand_f64(rand: &mut Rand) -> f64 {
+    rand.dist.sample(&mut rand.rng)
 }
 
 #[cfg(test)]

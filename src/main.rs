@@ -4,6 +4,7 @@ use raytracer::vec::{ Point3 };
 const OUT_WIDTH:  u32 = 640;
 const OUT_HEIGHT: u32 = 480;
 const SAMPLES:    u32 = 100;
+const MAX_DEPTH:  u32 = 50;
 
 fn main() {
     let mut world: HittableGroup = vec![];
@@ -12,5 +13,5 @@ fn main() {
     world.push(&sphere);
     world.push(&ground);
 
-    print!("{}", raytracer::create_ppm(&world, OUT_WIDTH, OUT_HEIGHT, SAMPLES));
+    print!("{}", raytracer::create_ppm(&world, OUT_WIDTH, OUT_HEIGHT, SAMPLES, MAX_DEPTH));
 }

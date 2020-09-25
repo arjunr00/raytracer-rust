@@ -1,3 +1,4 @@
+use rand::distributions::Distribution;
 use std::{ ops::{self}, cmp };
 
 use super::math;
@@ -53,6 +54,13 @@ impl Vec3 {
 
     pub fn unit(&self) -> Vec3 {
         (1.0/self.norm()) * self
+    }
+
+    pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
+        let x = rand.dist.sample(&mut rand.rng);
+        let y = rand.dist.sample(&mut rand.rng);
+        let z = rand.dist.sample(&mut rand.rng);
+        Vec3::new(x, y, z).unit()
     }
 }
 
@@ -253,14 +261,16 @@ impl Ray {
         &self.origin + &(t * &self.dir)
     }
 
-    pub fn get_color(&self, world: &HittableGroup) -> ColorRGB {
-        match world.check_hit(self, 0.0, f64::INFINITY) {
+    pub fn get_color(&self, world: &HittableGroup, depth: u32, rand: &mut math::Rand) -> ColorRGB {
+        if depth <= 0 { return colors::BLACK; }
+        match world.is_hit(self, 0.001, f64::INFINITY) {
             None => {
                 let t = 0.5 * (1.0 - self.dir[Coord::Y]);
                 math::lerp(colors::SKYBLUE, colors::WHITE, t)
             },
             Some(hit) => {
-                0.5 * (hit.normal + ColorRGB::new(1.0, 1.0, 1.0))
+                let target = &hit.point + &hit.normal + Vec3::random_unit(rand);
+                0.5 * Ray::new(&hit.point, &(target - &hit.point)).get_color(&world, depth-1, rand)
             }
         }
     }
@@ -269,8 +279,9 @@ impl Ray {
 pub mod colors {
     use super::ColorRGB;
 
-    pub const SKYBLUE: ColorRGB = ColorRGB(0.5, 0.7, 1.0);
+    pub const BLACK: ColorRGB = ColorRGB(1.0, 1.0, 1.0);
     pub const WHITE: ColorRGB = ColorRGB(1.0, 1.0, 1.0);
+    pub const SKYBLUE: ColorRGB = ColorRGB(0.5, 0.7, 1.0);
 }
 
 #[cfg(test)]
@@ -363,16 +374,5 @@ mod tests {
     fn ray_at_t() {
         let ray = Ray::new(&Point3::new(0.0, 1.0, 2.0), &Vec3::new(3.0, 4.0, 0.0));
         assert_eq!(ray.at(5.0), Vec3::new(3.0, 5.0, 2.0));
-    }
-
-    #[test]
-    fn sphere_ray_color() {
-        use super::super::geom::Sphere;
-
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
-        let ray = Ray::new(&Point3::new(0.0, 0.0, 0.0), &-Vec3::K);
-        let front_color = ray.get_color(&vec![&sphere]);
-
-        assert_eq!(front_color, Vec3::new(0.5, 0.5, 1.0));
     }
 }
