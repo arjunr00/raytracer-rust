@@ -19,6 +19,6 @@ Who would've guessed?
 
 ## What it looks like
 
-This is the image produced by redirecting the output of `src/main.rs`:
+640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~8 seconds and looks like this:
 
 ![raytracer](https://user-images.githubusercontent.com/30734384/94217642-822e6800-feb0-11ea-8626-d08a9a8fb54d.png)
