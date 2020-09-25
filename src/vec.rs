@@ -26,53 +26,6 @@ pub enum Coord {
     X, Y, Z
 }
 
-impl Vec3 {
-    pub const I: Vec3 = Vec3 ( 1.0, 0.0, 0.0 );
-    pub const J: Vec3 = Vec3 ( 0.0, 1.0, 0.0 );
-    pub const K: Vec3 = Vec3 ( 0.0, 0.0, 1.0 );
-    pub const O: Vec3 = Vec3 ( 0.0, 0.0, 0.0 );
-
-    pub fn new(e1: f64, e2: f64, e3: f64) -> Vec3 {
-        Vec3(e1, e2, e3)
-    }
-
-    pub fn dot(&self, other: &Vec3) -> f64 {
-        self.0 * other.0 + self.1 * other.1 + self.2 * other.2
-    }
-
-    pub fn cross(&self, other: &Vec3) -> Vec3 {
-        Vec3::new(
-            self.1 * other.2 - self.2 * other.1,
-            self.2 * other.0 - self.0 * other.2,
-            self.0 * other.1 - self.1 * other.0
-        )
-    }
-
-    pub fn norm(&self) -> f64 {
-        (self.0.powi(2) + self.1.powi(2) + self.2.powi(2)).sqrt()
-    }
-
-    pub fn unit(&self) -> Vec3 {
-        (1.0/self.norm()) * self
-    }
-
-    pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
-        let x = rand.dist.sample(&mut rand.rng);
-        let y = rand.dist.sample(&mut rand.rng);
-        let z = rand.dist.sample(&mut rand.rng);
-        Vec3::new(x, y, z).unit()
-    }
-}
-
-impl cmp::PartialEq for Vec3 {
-    // Explicitly define equality to account for floating-point imprecision
-    fn eq(&self, other: &Vec3) -> bool {
-        math::f_eq(self.0, other.0)
-        && math::f_eq(self.1, other.1)
-        && math::f_eq(self.2, other.2)
-    }
-}
-
 impl Ray {
     pub fn new(origin: &Point3, dir: &Vec3) -> Ray {
         Ray {
@@ -103,6 +56,57 @@ impl Ray {
                 }
             }
         }
+    }
+}
+
+impl Vec3 {
+    pub const I: Vec3 = Vec3 ( 1.0, 0.0, 0.0 );
+    pub const J: Vec3 = Vec3 ( 0.0, 1.0, 0.0 );
+    pub const K: Vec3 = Vec3 ( 0.0, 0.0, 1.0 );
+    pub const O: Vec3 = Vec3 ( 0.0, 0.0, 0.0 );
+
+    pub fn new(e1: f64, e2: f64, e3: f64) -> Vec3 {
+        Vec3(e1, e2, e3)
+    }
+
+    pub fn dot(&self, other: &Vec3) -> f64 {
+        self.0 * other.0 + self.1 * other.1 + self.2 * other.2
+    }
+
+    pub fn cross(&self, other: &Vec3) -> Vec3 {
+        Vec3::new(
+            self.1 * other.2 - self.2 * other.1,
+            self.2 * other.0 - self.0 * other.2,
+            self.0 * other.1 - self.1 * other.0
+        )
+    }
+
+    pub fn norm(&self) -> f64 {
+        (self.0.powi(2) + self.1.powi(2) + self.2.powi(2)).sqrt()
+    }
+
+    pub fn unit(&self) -> Vec3 {
+        (1.0/self.norm()) * self
+    }
+
+    pub fn reflect(&self, n: &Vec3) -> Vec3 {
+        self - 2.0 * self.dot(n) * n
+    }
+
+    pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
+        let x = rand.dist.sample(&mut rand.rng);
+        let y = rand.dist.sample(&mut rand.rng);
+        let z = rand.dist.sample(&mut rand.rng);
+        Vec3::new(x, y, z).unit()
+    }
+}
+
+impl cmp::PartialEq for Vec3 {
+    // Explicitly define equality to account for floating-point imprecision
+    fn eq(&self, other: &Vec3) -> bool {
+        math::f_eq(self.0, other.0)
+        && math::f_eq(self.1, other.1)
+        && math::f_eq(self.2, other.2)
     }
 }
 

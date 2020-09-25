@@ -25,7 +25,7 @@ impl Hittable for HittableGroup<'_> {
         let mut hit: Option<Hit> = None;
         let mut closest_t = t_max;
 
-        for obj in self.iter() {
+        for obj in self {
             if let Some(obj_hit) = obj.is_hit(ray, t_min, closest_t) {
                 closest_t = obj_hit.t;
                 hit = Some(obj_hit);
@@ -63,7 +63,7 @@ impl Hittable for Sphere<'_> {
                 return Some(Hit {
                     point: ray.at(t1),
                     normal: normal.unit(),
-                    t: 0.0,
+                    t: t1,
                     material: self.material
                 });
             }
@@ -74,7 +74,7 @@ impl Hittable for Sphere<'_> {
                 return Some(Hit {
                     point: ray.at(t2),
                     normal: normal.unit(),
-                    t: 0.0,
+                    t: t2,
                     material: self.material
                 });
             }
@@ -87,10 +87,13 @@ impl Hittable for Sphere<'_> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use super::super::material::DiffuseLambert;
+    use super::super::vec::colors;
 
     #[test]
     fn sphere_hit() {
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, &mat_dif_white);
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
             "Ray should have hit sphere but didn't.")
@@ -98,7 +101,8 @@ mod tests {
 
     #[test]
     fn sphere_miss() {
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5);
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, &mat_dif_white);
         let ray = Ray::new(&Vec3::O, &Vec3::J);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
             "Ray shouldn't have hit sphere but did.")
@@ -106,7 +110,8 @@ mod tests {
 
     #[test]
     fn sphere_inside_miss() {
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5);
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5, &mat_dif_white);
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
             "Ray shouldn't have hit sphere but did.")
