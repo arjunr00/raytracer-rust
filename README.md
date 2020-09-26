@@ -7,11 +7,13 @@ I'm using [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTra
 * Rust and Cargo. Just install `rustup` from [here](https://www.rust-lang.org/tools/install) and it'll install the whole Rust toolchain.
 
 ## How to build and run
-Clone this repository and run `cargo run > something.ppm`.
-It's that easy!
-(Use a redirect because this currently outputs PPM data to your terminal's standard out.)
+For a static image, just run `cargo run --release > something.ppm`.
+Don't forget the redirect, because this currently outputs PPM data to your terminal's standard out.
 
-Run `cargo build` if you just want to compile without running.
+If you want to generate an animation, comment out `src/main:37-40` and uncomment `src/main:43-63`, then run `cargo run --release`.
+No redirection this time; the frames are generated in the `frames/` directory.
+
+Run `cargo build` or `cargo build --release` if you just want to compile without running.
 
 ## How to test
 Run `cargo test`.
