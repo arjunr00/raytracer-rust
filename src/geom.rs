@@ -108,11 +108,11 @@ mod tests {
     }
 
     #[test]
-    fn sphere_inside_miss() {
+    fn sphere_inside_hit() {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5, &mat_dif_white);
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
-        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
-            "Ray shouldn't have hit sphere but did.")
+        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+            "Ray should have hit sphere but didn't.")
     }
 }
