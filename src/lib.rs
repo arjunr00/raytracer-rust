@@ -60,7 +60,7 @@ pub fn create_ppm(world: &HittableGroup, camera: &Camera, config: &ImageConfig) 
                 let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
                 let v = ((i as f64) + rand_f64(&mut rand)) / f64::from(height - 1);
 
-                let r = camera.ray(u, v);
+                let r = camera.ray(u, v, &mut rand);
 
                 color += r.get_color(world, max_depth, &mut rand);
             }

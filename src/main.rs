@@ -9,7 +9,8 @@ const OUT_WIDTH:  u32 = 640;
 const OUT_HEIGHT: u32 = 480;
 const SAMPLES:    u32 = 100;
 const MAX_DEPTH:  u32 = 50;
-const FOV_DEG:    f64 = 60.0;
+const FOV_DEG:    f64 = 40.0;
+const APERTURE:   f64 = 0.05;
 
 fn main() {
     let config = raytracer::ImageConfig {
@@ -34,16 +35,17 @@ fn main() {
     world.push(&green_metal_ball);
 
     let camera =
-        Camera::new(Point3::new(0.4, -0.4, 0.8), &Point3::new(0.0, 0.0, -1.0),
-            FOV_DEG, OUT_WIDTH, OUT_HEIGHT);
+        Camera::new(Point3::new(3.0, -0.2, -0.3), &Point3::new(0.6, -0.2, -1.0),
+            FOV_DEG, APERTURE, OUT_WIDTH, OUT_HEIGHT);
     print!("{}", raytracer::create_ppm(&world, &camera, &config));
 
     /*
     use std::fs::{ File, create_dir_all };
     use std::io::prelude::Write;
+    use std::f64::consts::{ PI, SQRT_2 };
     use std::path::Path;
 
-    let look_at = Point3::new(0.0, 0.0, -1.0);
+    let look_at = Point3::new(0.6, -0.2, -1.0);
     create_dir_all("frames/").unwrap();
     for i in 0..120 {
         eprintln!("Frame {}:", i+1);
@@ -51,12 +53,11 @@ fn main() {
         let path = Path::new(&frame_name);
         let mut file = File::create(&path).unwrap();
 
-        let dist = std::f64::consts::SQRT_2;
-        let angle = f64::from(i) * 2.0 * std::f64::consts::PI / 120.0;
+        let dist = SQRT_2;
+        let angle = f64::from(i) * 2.0 * PI / 120.0;
         let camera =
-            Camera::new(&look_at + Point3::new(dist * angle.cos(), -0.4, dist * angle.sin()),
-                &look_at, FOV_DEG, OUT_WIDTH, OUT_HEIGHT);
-
+            Camera::new(&look_at + Point3::new(dist * angle.cos(), 0.4, dist * angle.sin()),
+                &look_at, FOV_DEG, APERTURE, OUT_WIDTH, OUT_HEIGHT);
 
         file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
     }

@@ -116,6 +116,13 @@ impl Vec3 {
         let z = rand.dist.sample(&mut rand.rng);
         Vec3::new(x, y, z).unit()
     }
+
+    pub fn random_in_unit_disc(rand: &mut math::Rand) -> Vec3 {
+        // Under the assumption that the input dist is 0 to 1
+        let x = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
+        let y = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
+        Vec3::new(x, y, 0.0).unit()
+    }
 }
 
 impl cmp::PartialEq for Vec3 {
