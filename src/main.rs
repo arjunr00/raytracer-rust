@@ -5,12 +5,12 @@ use raytracer::{
     vec::{ ColorRGB, Point3, Vec3 }
 };
 
-const OUT_WIDTH:  u32 = 320;
-const OUT_HEIGHT: u32 = 240;
+const OUT_WIDTH:  u32 = 640;
+const OUT_HEIGHT: u32 = 480;
 const SAMPLES:    u32 = 100;
 const MAX_DEPTH:  u32 = 50;
 const FOV_DEG:    f64 = 40.0;
-const APERTURE:   f64 = 0.0;
+const APERTURE:   f64 = 0.1;
 
 fn main() {
     let config = raytracer::ImageConfig {
@@ -22,7 +22,7 @@ fn main() {
     let mat_dif_soft_red = DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4));
     let mat_dif_soft_gray = DiffuseLambert::new(ColorRGB::new(0.8, 0.8, 0.8));
     let mat_glass_white = Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52);
-    let mat_metal_rough_soft_green = Reflective::new(ColorRGB::new(0.6, 0.8, 0.3), 0.6);
+    let mat_metal_rough_soft_green = Reflective::new(ColorRGB::new(0.6, 0.8, 0.3), 0.3);
 
     let mut world: HittableGroup = vec![];
     let ground = Sphere::new(Point3::new(0.0, -100.5, -1.0), 100.0, &mat_dif_soft_blue);
@@ -30,8 +30,8 @@ fn main() {
     let glass_ball = Sphere::new(Point3::new(-0.27, -0.1, -0.8), 0.4, &mat_glass_white);
     let green_metal_ball = Sphere::new(Point3::new(0.0, 0.0, -1.5), 0.5, &mat_metal_rough_soft_green);
     let gray_plane = Plane::new(
-        Point3::new(0.6, 0.2, -0.2), 
-        (Vec3::new(0.2, 0.1, 0.0), Vec3::new(0.1, -0.2, 0.1)),
+        Point3::new(0.6, 0.0, -1.7), 
+        (Vec3::new(0.0, 0.1, 0.2), Vec3::new(0.1, 0.2, -0.1)),
         &mat_dif_soft_gray
     );
 
@@ -42,7 +42,7 @@ fn main() {
     world.push(&gray_plane);
 
     let camera =
-        Camera::new(Point3::new(0.5, 0.3, 3.0), &Point3::new(0.0, 0.0, -1.0),
+        Camera::new(Point3::new(3.0, -0.3, -0.5), &Point3::new(0.6, -0.2, -1.0),
             FOV_DEG, APERTURE, OUT_WIDTH, OUT_HEIGHT);
     print!("{}", raytracer::create_ppm(&world, &camera, &config));
 
