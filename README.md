@@ -10,7 +10,7 @@ I'm using [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTra
 For a static image, just run `cargo run --release > something.ppm`.
 Don't forget the redirect, because this currently outputs PPM data to your terminal's standard out.
 
-If you want to generate an animation, comment out `src/main:37-40` and uncomment `src/main:43-63`, then run `cargo run --release`.
+If you want to generate an animation, comment out `src/main:44-47` and uncomment `src/main:50-71`, then run `cargo run --release`.
 No redirection this time; the frames are generated in the `frames/` directory.
 
 Run `cargo build` or `cargo build --release` if you just want to compile without running.
@@ -21,12 +21,12 @@ Who would've guessed?
 
 ## What it looks like
 
-640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~11 seconds:
+640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~14 seconds:
 
-![raytracer](https://user-images.githubusercontent.com/30734384/94325480-95067280-ff6c-11ea-9a51-5563a16be795.png)
+![raytracer](https://user-images.githubusercontent.com/30734384/94350133-34813f00-0019-11eb-9844-dedd5879e45a.png)
 
-From left to right: transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.6.
+From left to right: transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.3, and diffuse plane.
 
-Here's a lower-resolution (320x240) animation to show off reflection and refraction (without any DoF blur), taking ~6 minutes to render every frame:
+Here's an animation to show off reflection and refraction. Took about 28.5 minutes to render 120 frames, so averaging about 14.3 seconds per frame.
 
-![animation](https://user-images.githubusercontent.com/30734384/94319968-cf1a4900-ff59-11ea-9b2c-234b353027eb.gif)
+![animation](https://user-images.githubusercontent.com/30734384/94350134-35b26c00-0019-11eb-8874-517e1659ad21.gif)
