@@ -89,7 +89,21 @@ pub struct Plane<'a> {
 
 impl Plane<'_> {
     pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3), material: &dyn Material) -> Plane {
-        Plane { center, spanning_vecs, material }
+        let plane_i = spanning_vecs.0;
+        let mut plane_j = spanning_vecs.1;
+
+        if !Vec3::orthogonal(&plane_i, &plane_j) {
+            let plane_k = plane_i.cross(&plane_j);
+            let new_plane_j = plane_j.projections(&plane_i, &plane_k.cross(&plane_i)).1;
+            eprintln!(
+                "Warning: Plane centered at {} is not spanned by orthogonal vectors. \
+                Second spanning vector {} has been projected to {}.",
+                center, plane_j, new_plane_j
+            );
+            plane_j = new_plane_j;
+        }
+
+        Plane { center, spanning_vecs: (plane_i, plane_j), material }
     }
 }
 

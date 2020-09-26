@@ -1,5 +1,5 @@
 use rand::distributions::Distribution;
-use std::{ ops::{self}, cmp };
+use std::{ ops::{self}, cmp, fmt };
 
 use super::math;
 use super::geom::{ Hittable, HittableGroup };
@@ -67,6 +67,10 @@ impl Vec3 {
 
     pub fn new(e1: f64, e2: f64, e3: f64) -> Vec3 {
         Vec3(e1, e2, e3)
+    }
+
+    pub fn orthogonal(v: &Vec3, w: &Vec3) -> bool {
+        math::f_eq(v.dot(w), 0.0)
     }
 
     pub fn dot(&self, other: &Vec3) -> f64 {
@@ -140,6 +144,12 @@ impl Vec3 {
         let x = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
         let y = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
         Vec3::new(x, y, 0.0).unit()
+    }
+}
+
+impl fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\u{27E8}{:.2}, {:.2}, {:.2}\u{27E9}", self[Coord::X], self[Coord::Y], self[Coord::Z])
     }
 }
 
