@@ -89,6 +89,24 @@ impl Vec3 {
         (1.0/self.norm()) * self
     }
 
+    pub fn projections(&self, onto: &Vec3, along: &Vec3) -> (Vec3, Vec3) {
+        let onto_unit = onto.unit();
+        let along_unit = along.unit();
+
+        let self_parallel = (self.dot(&onto_unit)) * &onto_unit;
+        let self_perp = self - &self_parallel;
+
+        let cos_phi = onto_unit.dot(&along_unit);
+        if math::f_eq(cos_phi, 0.0) {
+            return (self_parallel, self_perp);
+        }
+
+        let tan_phi = cos_phi.acos().tan();
+
+        (self_parallel - (self_perp.norm() / tan_phi) * onto_unit,
+        ((self_perp.norm() / tan_phi).powi(2) + self_perp.norm().powi(2)).sqrt() * along_unit)
+    }
+
     pub fn reflect(&self, normal: &Vec3) -> Vec3 {
         self - 2.0 * self.dot(normal) * normal
     }
