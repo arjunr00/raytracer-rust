@@ -21,12 +21,12 @@ Who would've guessed?
 
 ## What it looks like
 
-640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~14 seconds:
+640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~15 seconds:
 
-![raytracer](https://user-images.githubusercontent.com/30734384/94350133-34813f00-0019-11eb-9844-dedd5879e45a.png)
+![raytracer](https://user-images.githubusercontent.com/30734384/94374576-46c3b180-00db-11eb-8ac8-6561cb1f42fe.png)
 
 From left to right: transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.3, and diffuse plane.
 
-Here's an animation to show off reflection and refraction. Took about 28.5 minutes to render 120 frames, so averaging about 14.3 seconds per frame.
+Here's an animation to show off reflection and refraction. Took about 35.7 minutes to render 120 frames, so averaging about 17.8 seconds per frame.
 
-![animation](https://user-images.githubusercontent.com/30734384/94350134-35b26c00-0019-11eb-8874-517e1659ad21.gif)
+![animation](https://user-images.githubusercontent.com/30734384/94374578-47f4de80-00db-11eb-9119-79268db7baa7.gif)
