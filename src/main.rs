@@ -5,12 +5,12 @@ use raytracer::{
     vec::{ ColorRGB, Point3, Vec3 }
 };
 
-const OUT_WIDTH:  u32 = 640;
-const OUT_HEIGHT: u32 = 480;
+const OUT_WIDTH:  u32 = 320;
+const OUT_HEIGHT: u32 = 240;
 const SAMPLES:    u32 = 100;
 const MAX_DEPTH:  u32 = 50;
 const FOV_DEG:    f64 = 40.0;
-const APERTURE:   f64 = 0.1;
+const APERTURE:   f64 = 0.0;
 
 fn main() {
     let config = raytracer::ImageConfig {
@@ -41,12 +41,13 @@ fn main() {
     world.push(&green_metal_ball);
     world.push(&gray_plane);
 
+    /*
     let camera =
-        Camera::new(Point3::new(3.0, -0.3, -0.5), &Point3::new(0.6, -0.2, -1.0),
+        Camera::new(Point3::new(3.0, -0.3, 3.0), &Point3::new(-0.27, -0.1, -0.8),
             FOV_DEG, APERTURE, OUT_WIDTH, OUT_HEIGHT);
     print!("{}", raytracer::create_ppm(&world, &camera, &config));
+    */
 
-    /*
     use std::fs::{ File, create_dir_all };
     use std::io::prelude::Write;
     use std::f64::consts;
@@ -69,5 +70,4 @@ fn main() {
 
         file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
     }
-    */
 }

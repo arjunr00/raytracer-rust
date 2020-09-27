@@ -174,4 +174,17 @@ mod tests {
         assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
             "Ray should have hit plane but didn't.")
     }
+
+    #[test]
+    fn plane_miss() {
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let plane = Plane::new(
+            Point3::new(0.0, 1.0, 0.0),
+            (0.5 * Vec3::I, -0.5 * Vec3::K),
+            &mat_dif_white
+        );
+        let ray = Ray::new(&Vec3::O, &(Vec3::J + Vec3::I));
+        assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
+            "Ray shouldn't have hit plane but did.")
+    }
 }

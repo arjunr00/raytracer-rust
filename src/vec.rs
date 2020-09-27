@@ -119,17 +119,16 @@ impl Vec3 {
         let self_unit = self.unit();
         let sin_theta_i = (self_unit.cross(normal)).norm();
         let cos_theta_i = f64::abs(self_unit.dot(normal));
-        // Total internal reflection
+        // Total internal reflection or Fresnel reflection
         if index_i >= index_r && sin_theta_i > index_r/index_i
             || rand.dist.sample(&mut rand.rng) < math::schlick(cos_theta_i, index_i, index_r)
         {
             return self.reflect(normal);
         }
 
-
         let theta_r = (sin_theta_i * index_i / index_r).asin();
-        (-theta_r.cos()) * normal // Parallel to normal
-            + (index_i / index_r) * (self + self_unit.dot(normal) * normal) // Perp to normal
+        let refracted_perp = theta_r.tan() * self.cross(&-normal).cross(&normal).unit();
+        -normal + refracted_perp
     }
 
     pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
@@ -472,5 +471,72 @@ mod tests {
     fn ray_at_t() {
         let ray = Ray::new(&Point3::new(0.0, 1.0, 2.0), &Vec3::new(3.0, 4.0, 0.0));
         assert_eq!(ray.at(5.0), Vec3::new(3.0, 5.0, 2.0));
+    }
+
+    #[test]
+    fn project_vec() {
+        let vector = Vec3::new(1.0, 1.0, 0.0);
+        let onto = Vec3::I;
+        let along = Vec3::J;
+
+        assert_eq!(vector.projections(&onto, &along), (Vec3::I, Vec3::J));
+    }
+
+    #[test]
+    fn reflect_vec() {
+        let incident = Vec3::I - Vec3::J;
+        let normal = Vec3::J;
+        assert_eq!(incident.reflect(&normal), Vec3::I + Vec3::J);
+    }
+
+    #[test]
+    fn refract_vec() {
+        let constant = rand::distributions::Uniform::from(0.9..1.0);
+        let rng = rand::thread_rng();
+        let mut rand = math::Rand { dist: constant, rng };
+
+        let normal = Vec3::J;
+        let incident = Vec3::new(1.0, -1.0, 0.0);
+        let refracted = incident.refract(&normal, 1.0, 1.5, &mut rand); 
+        assert!(math::f_eq(refracted.unit().dot(&-normal).acos(),
+            (std::f64::consts::SQRT_2 / 3.0).asin()));
+    }
+
+    #[test]
+    fn refract_another_vec() {
+        let constant = rand::distributions::Uniform::from(0.9..1.0);
+        let rng = rand::thread_rng();
+        let mut rand = math::Rand { dist: constant, rng };
+
+        let normal = Vec3::new(0.5, 0.4, 0.3).unit();
+        let incident = Vec3::new(0.7, 0.9, 1.0);
+        let refracted = incident.refract(&normal, 1.0, 1.52, &mut rand); 
+        let expected_angle = ((1.01 * (2.0_f64 / 2.3_f64).sqrt()).acos().sin() / 1.52).asin();
+
+        assert!(math::f_eq(refracted.unit().dot(&-normal).acos(), expected_angle));
+    }
+
+    #[test]
+    fn total_internal_reflection() {
+        let constant = rand::distributions::Uniform::from(0.9..1.0);
+        let rng = rand::thread_rng();
+        let mut rand = math::Rand { dist: constant, rng };
+
+        let normal = Vec3::J;
+        let incident = Vec3::new(1.0, -1.0, 0.0);
+        let refracted = incident.refract(&normal, 1.5, 1.0, &mut rand); 
+        assert_eq!(refracted, incident.reflect(&normal));
+    }
+
+    #[test]
+    fn schlick() {
+        let constant = rand::distributions::Uniform::from(0.0..1.0);
+        let rng = rand::thread_rng();
+        let mut rand = math::Rand { dist: constant, rng };
+
+        let normal = Vec3::J;
+        let incident = Vec3::I;
+        let refracted = incident.refract(&normal, 1.0, 1.5, &mut rand);
+        assert_eq!(refracted, incident.reflect(&normal));
     }
 }
