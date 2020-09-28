@@ -129,6 +129,59 @@ impl Hittable for Plane<'_> {
     }
 }
 
+pub struct Prism<'a> {
+    planes: [Plane<'a> ; 6]
+}
+
+impl Prism<'_> {
+    pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3, Vec3), material: &dyn Material)
+        -> Prism
+    {
+        let prism_i = spanning_vecs.0;
+        let prism_j = spanning_vecs.1;
+        let prism_k = spanning_vecs.2;
+
+        let front_face = Plane::new(
+            &center - prism_k.clone(), (prism_j.clone(), prism_i.clone()), material
+        );
+        let back_face = Plane::new(
+            &center + prism_k.clone(), (prism_i.clone(), prism_j.clone()), material
+        );
+        let top_face = Plane::new(
+            &center + prism_j.clone(), (prism_k.clone(), prism_i.clone()), material
+        );
+        let bottom_face = Plane::new(
+            &center - prism_j.clone(), (prism_i.clone(), prism_k.clone()), material
+        );
+        let left_face = Plane::new(
+            &center - prism_i.clone(), (prism_k.clone(), prism_j.clone()), material
+        );
+        let right_face = Plane::new(
+            &center + prism_i.clone(), (prism_j.clone(), prism_k.clone()), material
+        );
+
+        Prism {
+            planes: [ front_face, top_face, left_face, bottom_face, right_face, back_face ]
+        }
+    }
+}
+
+impl Hittable for Prism<'_> {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+        let mut hit: Option<Hit> = None;
+        let mut closest_t = t_max;
+
+        for obj in self.planes.iter() {
+            if let Some(obj_hit) = obj.is_hit(ray, t_min, closest_t) {
+                closest_t = obj_hit.t;
+                hit = Some(obj_hit);
+            }
+        }
+
+        hit
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
