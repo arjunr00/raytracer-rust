@@ -1,3 +1,5 @@
+use std::clone::Clone;
+
 use super::math;
 use super::material::Material;
 use super::vec::{ Point3, Ray, Vec3 };

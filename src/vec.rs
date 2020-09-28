@@ -1,5 +1,5 @@
 use rand::distributions::Distribution;
-use std::{ ops::{self}, cmp, fmt };
+use std::{ ops::{self}, clone, cmp, fmt };
 
 use super::math;
 use super::geom::{ Hittable, HittableGroup };
@@ -149,6 +149,18 @@ impl Vec3 {
 impl fmt::Display for Vec3 {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         write!(f, "\u{27E8}{:.2}, {:.2}, {:.2}\u{27E9}", self[Coord::X], self[Coord::Y], self[Coord::Z])
+    }
+}
+
+impl clone::Clone for Ray {
+    fn clone(&self) -> Ray {
+        Ray { origin: self.origin.clone(), dir: self.dir.clone() }
+    }
+}
+
+impl clone::Clone for Vec3 {
+    fn clone(&self) -> Vec3 {
+        Vec3::new(self.0, self.1, self.2)
     }
 }
 
