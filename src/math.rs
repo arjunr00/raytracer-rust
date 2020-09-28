@@ -16,6 +16,14 @@ pub fn f_eq(lhs: f64, rhs: f64) -> bool {
     (lhs - rhs).abs() <= FLOAT_THRESHOLD
 }
 
+pub fn f_leq(lhs: f64, rhs: f64) -> bool {
+    lhs < rhs || f_eq(lhs, rhs)
+}
+
+pub fn f_geq(lhs: f64, rhs: f64) -> bool {
+    lhs > rhs || f_eq(lhs, rhs)
+}
+
 /// Linearly interpolate between a starting and ending value with a factor of `t`
 pub fn lerp<T>(start: T, end: T, t: f64) -> T
 where

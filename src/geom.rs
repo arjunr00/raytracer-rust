@@ -114,14 +114,15 @@ impl Hittable for Plane<'_> {
         let plane_i = &self.spanning_vecs.0;
         let plane_j = &self.spanning_vecs.1;
         let normal = (plane_i.cross(plane_j)).unit();
-        if math::f_eq(ray.dir.dot(&normal), 0.0) { return None; }
+        if Vec3::orthogonal(&ray.dir, &normal) { return None; }
 
         let t = ((&self.center - &ray.origin).dot(&normal)) / (ray.dir.dot(&normal));
         let center_to_point = ray.at(t) - &self.center;
         let ctp_components = center_to_point.projections(&plane_i, &plane_j);
 
         if t < t_max && t > t_min
-            && ctp_components.0.norm() <= plane_i.norm() && ctp_components.1.norm() <= plane_j.norm()
+            && math::f_leq(ctp_components.0.norm(), plane_i.norm())
+            && math::f_leq(ctp_components.1.norm(), plane_j.norm())
         {
             let outer = ray.dir.dot(&normal) < 0.0;
             Some(Hit::new(ray.at(t), normal, t, outer, self.material))
