@@ -41,21 +41,32 @@ impl Ray {
     }
 
     pub fn get_color(&self, world: &HittableGroup, depth: u32, rand: &mut math::Rand) -> ColorRGB {
-        if depth <= 0 { return colors::BLACK; }
-        match world.is_hit(self, 0.001, f64::INFINITY) {
-            None => {
-                let t = 0.5 * (1.0 - self.dir[Coord::Y]);
-                math::lerp(colors::SKYBLUE, colors::WHITE, t)
-            },
-            Some(hit) => {
-                match hit.material.scatter(self, &hit, rand) {
-                    None => colors::BLACK,
-                    Some(scattered) => {
-                        hit.material.attenuation() * scattered.get_color(&world, depth-1, rand)
+        let mut color = colors::WHITE;
+        let mut ray: Ray = self.clone();
+
+        for _ in 0..depth {
+            match world.is_hit(&ray, 0.001, f64::INFINITY) {
+                None => {
+                    let t = 0.5 * (1.0 - ray.dir[Coord::Y]);
+                    color *= math::lerp(colors::SKYBLUE, colors::WHITE, t);
+                    break;
+                },
+                Some(hit) => {
+                    match hit.material.scatter(&ray, &hit, rand) {
+                        None => {
+                            color *= hit.material.attenuation() * hit.material.emit();
+                            break;
+                        },
+                        Some(scattered) => {
+                            ray = scattered;
+                            color = color * hit.material.attenuation();
+                        }
                     }
                 }
             }
         }
+
+        color
     }
 }
 
