@@ -47,9 +47,9 @@ fn main() {
 }
 
 fn render_scene_1(render_type: RenderType) {
-    let out_width = 320;
-    let out_height = 240;
-    let fov_deg = 50.0;
+    let out_width = 640;
+    let out_height = 480;
+    let fov_deg = 30.0;
     let aperture = 0.1;
     let samples = 100;
     let max_depth = 50;
@@ -65,7 +65,7 @@ fn render_scene_1(render_type: RenderType) {
 
     let mat_dif_soft_blue = material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8));
     let mat_dif_soft_red = material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4));
-    let mat_dif_soft_gray = material::Emissive::new(ColorRGB::new(0.8, 0.8, 0.8), 1.0);
+    let mat_dif_soft_gray = material::DiffuseLambert::new(ColorRGB::new(0.8, 0.8, 0.8));
     let mat_glass_white = material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52);
     let mat_metal_rough_soft_green = material::Reflective::new(ColorRGB::new(0.6, 0.8, 0.3), 0.3);
 
@@ -74,7 +74,7 @@ fn render_scene_1(render_type: RenderType) {
     let glass_ball = Sphere::new(Point3::new(-0.27, -0.1, -0.8), 0.4, &mat_glass_white);
     let green_metal_ball = Sphere::new(Point3::new(0.0, 0.0, -1.5), 0.5, &mat_metal_rough_soft_green);
     let gray_plane = Plane::new(
-        Point3::new(-0.5, 0.5, -2.5),
+        Point3::new(-0.5, 0.8, -2.5),
         (0.25 * (Vec3::I - Vec3::K), 0.25 * (Vec3::I + Vec3::J)),
         &mat_dif_soft_gray
     );
@@ -86,7 +86,7 @@ fn render_scene_1(render_type: RenderType) {
     match render_type {
         RenderType::Static => {
             let camera =
-                Camera::new(Point3::new(-1.5, 1.0, 3.0), &Point3::new(0.0, 0.0, -1.0),
+                Camera::new(Point3::new(0.7, -0.3, 3.0), &Point3::new(0.0, 0.0, -1.0),
                     fov_deg, aperture, out_width, out_height);
 
             let mut file = File::create(&Path::new("temp.ppm")).unwrap();
@@ -130,7 +130,7 @@ fn render_scene_2() {
     let max_depth = 500;
 
     let background = |_| {
-        0.3 * colors::WHITE
+        colors::BLACK
     };
     let config = raytracer::ImageConfig {
         width: out_width, height: out_height,
@@ -195,9 +195,9 @@ fn render_scene_2() {
         &light
     ];
 
-    let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
-    file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+    // let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
+    // file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
 
     // Uncomment to watch render live
-    // raytracer::write_ppm(&world, &camera, "cornell.ppm", &config);
+    raytracer::write_ppm(&world, &camera, "cornell.ppm", &config);
 }
