@@ -7,6 +7,7 @@ I'm using [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTra
 * Rust and Cargo. Just install `rustup` from [here](https://www.rust-lang.org/tools/install) and it'll install the whole Rust toolchain.
 
 ## How to build and run
+**NOTE: These instructions are outdated, will update soon.**
 For a static image, just run `cargo run --release > something.ppm`.
 Don't forget the redirect, because this currently outputs PPM data to your terminal's standard out.
 
