@@ -122,11 +122,11 @@ fn render_scene_1(render_type: RenderType) {
 
 // Cornell box
 fn render_scene_2() {
-    let out_width = 256;
-    let out_height = 256;
+    let out_width = 512;
+    let out_height = 512;
     let fov_deg = 37.0;
     let aperture = 0.0;
-    let samples = 1000;
+    let samples = 10000;
     let max_depth = 500;
 
     let background = |_| {
@@ -195,7 +195,7 @@ fn render_scene_2() {
         &light
     ];
 
-    let mut file = File::create(&Path::new("temp.ppm")).unwrap();
+    let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
     file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
 
     // Uncomment to watch render live
