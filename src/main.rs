@@ -111,11 +111,11 @@ fn render_scene_1(render_type: RenderType) {
 
 // Cornell box
 fn render_scene_2() {
-    let out_width = 64;
-    let out_height = 64;
+    let out_width = 512;
+    let out_height = 512;
     let fov_deg = 37.0;
     let aperture = 0.0;
-    let samples = 100;
+    let samples = 10000;
     let max_depth = 50;
 
     let config = raytracer::ImageConfig {
