@@ -36,7 +36,9 @@ impl DiffuseLambert {
 impl Material for DiffuseLambert {
     fn scatter(&self, _: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray>
     {
-        let dir = &hit.normal + Vec3::random_unit(rand);
+        let mut random_vec = Vec3::random_unit(rand);
+        if random_vec.dot(&hit.normal) < 0.0 { random_vec *= -1.0; }
+        let dir = &hit.normal + random_vec;
         Some(Ray::new(&hit.point, &dir))
     }
 

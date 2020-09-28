@@ -145,9 +145,10 @@ impl Vec3 {
     }
 
     pub fn random_unit(rand: &mut math::Rand) -> Vec3 {
-        let x = rand.dist.sample(&mut rand.rng);
-        let y = rand.dist.sample(&mut rand.rng);
-        let z = rand.dist.sample(&mut rand.rng);
+        // Under the assumption that the input dist is 0 to 1
+        let x = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
+        let y = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
+        let z = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
         Vec3::new(x, y, z).unit()
     }
 
@@ -258,6 +259,12 @@ impl ops::Mul<&Vec3> for &Vec3 {
 
 impl ops::MulAssign<Vec3> for Vec3 {
     fn mul_assign(&mut self, other: Vec3) {
+        *self = Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
+    }
+}
+
+impl ops::MulAssign<&Vec3> for Vec3 {
+    fn mul_assign(&mut self, other: &Vec3) {
         *self = Vec3::new(self.0 * other.0, self.1 * other.1, self.2 * other.2)
     }
 }
@@ -512,6 +519,13 @@ mod tests {
         let incident = Vec3::I - Vec3::J;
         let normal = Vec3::J;
         assert_eq!(incident.reflect(&normal), Vec3::I + Vec3::J);
+    }
+
+    #[test]
+    fn reflect_normal() {
+        let incident = Vec3::I;
+        let normal = -Vec3::I;
+        assert_eq!(incident.reflect(&normal), -Vec3::I);
     }
 
     #[test]
