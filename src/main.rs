@@ -1,12 +1,13 @@
 use std::fs::{ File, create_dir_all };
 use std::io::prelude::Write;
-use std::f64::consts;
 use std::path::Path;
+use std::f64::consts;
 
 use raytracer::{
     camera::Camera,
     geom::{ HittableGroup, Plane, Sphere, Prism },
-    vec::{ ColorRGB, Point3, Vec3 },
+    vec::{ colors, ColorRGB, Point3, Vec3 },
+    math,
     material
 };
 
@@ -53,9 +54,13 @@ fn render_scene_1(render_type: RenderType) {
     let samples = 100;
     let max_depth = 50;
 
+    let background = |t| {
+        math::lerp(colors::SKYBLUE, colors::WHITE, t)
+    };
     let config = raytracer::ImageConfig {
         width: out_width, height: out_height,
-        samples: samples, max_depth: max_depth
+        samples: samples, max_depth: max_depth,
+        background: &background
     };
 
     let mat_dif_soft_blue = material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8));
@@ -86,6 +91,9 @@ fn render_scene_1(render_type: RenderType) {
 
             let mut file = File::create(&Path::new("temp.ppm")).unwrap();
             file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+
+            // Uncomment to watch render live
+            // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);
         },
         RenderType::Animated => {
             let frames = 120;
@@ -94,8 +102,6 @@ fn render_scene_1(render_type: RenderType) {
             for i in 0..frames {
                 eprintln!("Frame {}:", i+1);
                 let frame_name = format!("frames/frame{}.ppm", i+1);
-                let path = Path::new(&frame_name);
-                let mut file = File::create(&path).unwrap();
 
                 let dist = 3.0 * consts::SQRT_2;
                 let angle = f64::from(i) * 2.0 * consts::PI / f64::from(frames);
@@ -103,7 +109,12 @@ fn render_scene_1(render_type: RenderType) {
                     Camera::new(&look_at + Point3::new(dist * angle.cos(), 0.4, dist * angle.sin()),
                         &look_at, fov_deg, aperture, out_width, out_height);
 
+                let path = Path::new(&frame_name);
+                let mut file = File::create(&path).unwrap();
                 file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+
+                // Uncomment to watch render live
+                // raytracer::write_ppm(&world, &camera, &frame_name, &config);
             }
         }
     };
@@ -111,16 +122,20 @@ fn render_scene_1(render_type: RenderType) {
 
 // Cornell box
 fn render_scene_2() {
-    let out_width = 512;
-    let out_height = 512;
+    let out_width = 256;
+    let out_height = 256;
     let fov_deg = 37.0;
     let aperture = 0.0;
-    let samples = 10000;
-    let max_depth = 50;
+    let samples = 1000;
+    let max_depth = 500;
 
+    let background = |_| {
+        0.3 * colors::WHITE
+    };
     let config = raytracer::ImageConfig {
         width: out_width, height: out_height,
-        samples: samples, max_depth: max_depth
+        samples: samples, max_depth: max_depth,
+        background: &background
     };
     let camera =
         Camera::new(Point3::new(278.0, 273.0, -800.0), &Point3::new(278.0, 273.0, 800.0),
@@ -143,7 +158,7 @@ fn render_scene_2() {
     );
     let back_wall = Plane::new(
         Point3::new(278.0, 274.4, 559.2),
-        (Point3::new(-278.0, 0.0, 0.0), Point3::new(0.0, 274.5, 0.0)),
+        (Point3::new(-278.0, 0.0, 0.0), Point3::new(0.0, 274.4, 0.0)),
         &mat_dif_white
     );
     let right_wall = Plane::new(
@@ -158,8 +173,8 @@ fn render_scene_2() {
     );
 
     let light = Plane::new(
-        Point3::new(278.0, 548.0, 279.5),
-        (Point3::new(130.0, 0.0, 0.0), Point3::new(0.0, 0.0, 105.0)),
+        Point3::new(278.0, 548.7, 279.5),
+        (Point3::new(65.0, 0.0, 0.0), Point3::new(0.0, 0.0, 52.5)),
         &mat_light
     );
 
@@ -182,4 +197,7 @@ fn render_scene_2() {
 
     let mut file = File::create(&Path::new("temp.ppm")).unwrap();
     file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+
+    // Uncomment to watch render live
+    // raytracer::write_ppm(&world, &camera, "cornell.ppm", &config);
 }

@@ -1,3 +1,6 @@
+use std::fs::{ File };
+use std::io::{ prelude::{ Write, Seek }, SeekFrom };
+use std::path::Path;
 use rand::distributions::Uniform;
 
 use camera::Camera;
@@ -14,11 +17,12 @@ pub use vec::colors;
 
 const MAX_COLORS: u32 = 255;
 
-pub struct ImageConfig {
+pub struct ImageConfig<'a> {
     pub width: u32,
     pub height: u32,
     pub samples: u32,
-    pub max_depth: u32
+    pub max_depth: u32,
+    pub background: &'a dyn Fn(f64) -> ColorRGB
 }
 
 /// Creates a String containing a PPM representation of a single pixel
@@ -62,7 +66,7 @@ pub fn create_ppm(world: &HittableGroup, camera: &Camera, config: &ImageConfig) 
 
                 let r = camera.ray(u, v, &mut rand);
 
-                color += r.get_color(world, max_depth, &mut rand);
+                color += r.get_color(world, config.background, max_depth, &mut rand);
             }
 
             ppm.push_str(&write_pixel(&color, samples));
@@ -74,4 +78,53 @@ pub fn create_ppm(world: &HittableGroup, camera: &Camera, config: &ImageConfig) 
 
     eprintln!("\nDone.");
     ppm
+}
+
+/// Similar to create_ppm, but performs one sample per pixel, writes to a file, and then performs
+/// the next sample. Slower, but useful for watching progress.
+pub fn write_ppm(world: &HittableGroup, camera: &Camera, filename: &str, config: &ImageConfig) {
+    let width = config.width;
+    let height = config.height;
+    let samples = config.samples;
+    let max_depth = config.max_depth;
+
+    let mut pixels: Vec<ColorRGB> = vec![];
+    let total_pixels = width * height;
+
+    let zero_to_one = Uniform::from(0.0..1.0);
+    let rng = rand::thread_rng();
+    let mut rand = Rand { dist: zero_to_one, rng };
+
+    let mut file = File::create(&Path::new(filename)).unwrap();
+    for s in 0..samples {
+        file.seek(SeekFrom::Start(0)).unwrap();
+        let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
+        eprintln!("\nSample {}:", s);
+        for i in 0..height {
+            for j in 0..width {
+                let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
+                let v = ((i as f64) + rand_f64(&mut rand)) / f64::from(height - 1);
+
+                let r = camera.ray(u, v, &mut rand);
+
+                let pixel_num = j + (i * width);
+                if pixels.len() <= pixel_num as usize {
+                    pixels.push(colors::BLACK);
+                }
+                match pixels.get_mut(pixel_num as usize) {
+                    None => pixels.push(r.get_color(world, config.background, max_depth, &mut rand)),
+                    Some(color) => *color += r.get_color(world, config.background, max_depth, &mut rand)
+                };
+
+                eprint!("\r{}/{} pixels rendered", pixel_num + 1, total_pixels);
+            }
+        }
+
+        for pixel in &pixels {
+            ppm.push_str(&write_pixel(&pixel, s));
+        }
+        file.write_all(&ppm.as_bytes()).unwrap();
+    }
+
+    eprintln!("\nDone.");
 }

@@ -40,7 +40,9 @@ impl Ray {
         &self.origin + &(t * &self.dir)
     }
 
-    pub fn get_color(&self, world: &HittableGroup, depth: u32, rand: &mut math::Rand) -> ColorRGB {
+    pub fn get_color(&self, world: &HittableGroup, bg: &dyn Fn(f64) -> ColorRGB, depth: u32, rand: &mut math::Rand)
+        -> ColorRGB
+    {
         let mut color = colors::WHITE;
         let mut ray: Ray = self.clone();
 
@@ -48,7 +50,7 @@ impl Ray {
             match world.is_hit(&ray, 0.001, f64::INFINITY) {
                 None => {
                     let t = 0.5 * (1.0 - ray.dir[Coord::Y]);
-                    color *= math::lerp(colors::SKYBLUE, colors::WHITE, t);
+                    color *= bg(t);
                     break;
                 },
                 Some(hit) => {
@@ -59,7 +61,7 @@ impl Ray {
                         },
                         Some(scattered) => {
                             ray = scattered;
-                            color = color * hit.material.attenuation();
+                            color *= hit.material.attenuation();
                         }
                     }
                 }
@@ -111,11 +113,11 @@ impl Vec3 {
         let self_parallel = (self.dot(&onto_unit)) * &onto_unit;
         let self_perp = self - &self_parallel;
 
-        let cos_phi = onto_unit.dot(&along_unit);
-        if math::f_eq(cos_phi, 0.0) {
+        if Vec3::orthogonal(&onto_unit, &along_unit) {
             return (self_parallel, self_perp);
         }
 
+        let cos_phi = onto_unit.dot(&along_unit);
         let tan_phi = cos_phi.acos().tan();
 
         (self_parallel - (self_perp.norm() / tan_phi) * onto_unit,
