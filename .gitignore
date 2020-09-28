@@ -5,6 +5,7 @@ frames/
 
 ## Temp files
 temp*
+cornell*
 
 ## Vim files
 .*swp
