@@ -388,7 +388,7 @@ impl ops::IndexMut<Coord> for Vec3 {
 pub mod colors {
     use super::ColorRGB;
 
-    pub const BLACK: ColorRGB = ColorRGB(1.0, 1.0, 1.0);
+    pub const BLACK: ColorRGB = ColorRGB(0.0, 0.0, 0.0);
     pub const WHITE: ColorRGB = ColorRGB(1.0, 1.0, 1.0);
     pub const SKYBLUE: ColorRGB = ColorRGB(0.5, 0.7, 1.0);
 }

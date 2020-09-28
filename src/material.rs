@@ -1,10 +1,11 @@
 use super::geom::Hit;
 use super::math::{ Rand, f_clamp };
-use super::vec::{ Ray, ColorRGB, Vec3 };
+use super::vec::{ colors, Ray, ColorRGB, Vec3 };
 
 pub trait Material {
-    fn scatter(&self, in_ray: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray>;
     fn attenuation(&self) -> &ColorRGB;
+    fn scatter(&self, _: &Ray, _: &Hit, _: &mut Rand) -> Option<Ray> { None }
+    fn emit(&self) -> ColorRGB { colors::BLACK }
 }
 
 pub struct DiffuseLambert {
@@ -19,6 +20,11 @@ pub struct Reflective {
 pub struct Transparent {
     albedo: ColorRGB,
     ref_index: f64
+}
+
+pub struct Emissive {
+    albedo: ColorRGB,
+    intensity: f64
 }
 
 impl DiffuseLambert {
@@ -89,5 +95,24 @@ impl Material for Transparent {
 
     fn attenuation(&self) -> &ColorRGB {
         &self.albedo
+    }
+}
+
+impl Emissive {
+    pub fn new(albedo: ColorRGB, intensity: f64) -> Emissive {
+        Emissive {
+            albedo,
+            intensity: if intensity < 0.0 { 0.0 } else { intensity }
+        }
+    }
+}
+
+impl Material for Emissive {
+    fn attenuation(&self) -> &ColorRGB {
+        &self.albedo
+    }
+
+    fn emit(&self) -> ColorRGB {
+        ColorRGB::new(self.intensity, self.intensity, self.intensity)
     }
 }
