@@ -195,9 +195,9 @@ fn render_scene_2() {
         &light
     ];
 
-    // let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
-    // file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+    let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
+    file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
 
     // Uncomment to watch render live
-    raytracer::write_ppm(&world, &camera, "cornell.ppm", &config);
+    // raytracer::write_ppm(&world, &camera, "cornell.ppm", &config);
 }
