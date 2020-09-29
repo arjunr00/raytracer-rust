@@ -22,6 +22,7 @@ pub enum Color {
     R, G, B
 }
 
+#[derive(Clone, Copy)]
 pub enum Coord {
     X, Y, Z
 }

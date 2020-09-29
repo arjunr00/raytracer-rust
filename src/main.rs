@@ -79,9 +79,9 @@ fn render_scene_1(render_type: RenderType) {
         &mat_dif_soft_gray
     );
 
-    let world: HittableGroup = vec![
+    let world = HittableGroup::new(vec![
         &ground, &red_ball, &glass_ball, &green_metal_ball, &gray_plane
-    ];
+    ]);
 
     match render_type {
         RenderType::Static => {
@@ -189,11 +189,11 @@ fn render_scene_2() {
         &mat_dif_white
     );
 
-    let world: HittableGroup = vec![
+    let world = HittableGroup::new(vec![
         &floor, &back_wall, &right_wall, &left_wall, &ceiling,
         &short_block, &tall_block,
         &light
-    ];
+    ]);
 
     let mut file = File::create(&Path::new("cornell.ppm")).unwrap();
     file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();

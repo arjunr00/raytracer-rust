@@ -33,6 +33,10 @@ where
     start * (1.0 - t) + end * t
 }
 
+/// TODO: Find the median of a list in O(n) time
+// pub fn median<T>(vec: Vec<T>) -> T {
+// }
+
 /// Clamp a value between a minimum and maximum
 pub fn f_clamp(val: f64, min: f64, max: f64) -> f64 {
     f64::max(min, f64::min(max, val))

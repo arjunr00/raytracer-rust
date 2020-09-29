@@ -8,6 +8,7 @@ use geom::HittableGroup;
 use math::{ f_clamp, rand_f64, Rand };
 use vec::ColorRGB;
 
+pub mod accel;
 pub mod camera;
 pub mod geom;
 pub mod material;
