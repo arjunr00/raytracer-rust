@@ -18,11 +18,12 @@ pub struct Ray {
     pub dir: Vec3
 }
 
+#[derive(Debug)]
 pub enum Color {
     R, G, B
 }
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, Debug)]
 pub enum Coord {
     X, Y, Z
 }
@@ -104,6 +105,11 @@ impl Vec3 {
     }
 
     pub fn unit(&self) -> Vec3 {
+        let norm = self.norm();
+        if math::f_eq(norm, 0.0) {
+            return Vec3::O;
+        }
+
         (1.0/self.norm()) * self
     }
 

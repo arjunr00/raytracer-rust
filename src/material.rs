@@ -2,26 +2,32 @@ use super::geom::Hit;
 use super::math::{ Rand, f_clamp };
 use super::vec::{ colors, Ray, ColorRGB, Vec3 };
 
-pub trait Material {
+pub trait MaterialBase {
     fn attenuation(&self) -> &ColorRGB;
     fn scatter(&self, _: &Ray, _: &Hit, _: &mut Rand) -> Option<Ray> { None }
     fn emit(&self) -> ColorRGB { colors::BLACK }
 }
 
+pub trait Material: MaterialBase + std::fmt::Debug {}
+
+#[derive(Debug)]
 pub struct DiffuseLambert {
     albedo: ColorRGB
 }
 
+#[derive(Debug)]
 pub struct Reflective {
     albedo: ColorRGB,
     roughness: f64
 }
 
+#[derive(Debug)]
 pub struct Transparent {
     albedo: ColorRGB,
     ref_index: f64
 }
 
+#[derive(Debug)]
 pub struct Emissive {
     albedo: ColorRGB,
     intensity: f64
@@ -33,7 +39,9 @@ impl DiffuseLambert {
     }
 }
 
-impl Material for DiffuseLambert {
+impl Material for DiffuseLambert {}
+
+impl MaterialBase for DiffuseLambert {
     fn scatter(&self, _: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray>
     {
         let mut random_vec = Vec3::random_unit(rand);
@@ -56,7 +64,9 @@ impl Reflective {
     }
 }
 
-impl Material for Reflective {
+impl Material for Reflective {}
+
+impl MaterialBase for Reflective {
     fn scatter(&self, in_ray: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray> {
         let reflection_dir = in_ray.dir.reflect(&hit.normal);
         let scattered = Ray::new(&hit.point, &(reflection_dir + self.roughness * Vec3::random_unit(rand)));
@@ -83,7 +93,9 @@ impl Transparent {
     }
 }
 
-impl Material for Transparent {
+impl Material for Transparent {}
+
+impl MaterialBase for Transparent {
     fn scatter(&self, in_ray: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray> {
         let refraction_dir =
             if hit.outer {
@@ -109,7 +121,9 @@ impl Emissive {
     }
 }
 
-impl Material for Emissive {
+impl Material for Emissive {}
+
+impl MaterialBase for Emissive {
     fn attenuation(&self) -> &ColorRGB {
         &self.albedo
     }

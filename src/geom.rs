@@ -1,7 +1,6 @@
 use std::clone::Clone;
 use std::f64::consts;
 
-use super::accel;
 use super::math;
 use super::material::Material;
 use super::vec::{ Coord, Point3, Ray, Vec3 };
@@ -23,6 +22,7 @@ impl Hit<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct AxisAlignedBoundingBox {
     pub center: Point3,
     pub ftr_corner: Point3,
@@ -30,13 +30,36 @@ pub struct AxisAlignedBoundingBox {
 }
 
 impl AxisAlignedBoundingBox {
-    pub fn intersects(&self, other: AxisAlignedBoundingBox) -> bool {
-        math::f_leq(self.bbl_corner[Coord::X], other.ftr_corner[Coord::X])
-        && math::f_leq(other.bbl_corner[Coord::X], self.ftr_corner[Coord::X])
-        && math::f_leq(self.bbl_corner[Coord::Y], other.ftr_corner[Coord::Y])
-        && math::f_leq(other.bbl_corner[Coord::Y], self.ftr_corner[Coord::Y])
-        && math::f_leq(self.bbl_corner[Coord::Z], other.ftr_corner[Coord::Z])
-        && math::f_leq(other.bbl_corner[Coord::Z], self.ftr_corner[Coord::Z])
+    pub fn box_intersects(&self, other: AxisAlignedBoundingBox) -> bool {
+        for &coord in [ Coord::X, Coord::Y, Coord::Z ].iter() {
+            if !(math::f_leq(self.bbl_corner[coord], other.ftr_corner[coord])
+                    && math::f_leq(other.bbl_corner[coord], self.ftr_corner[coord])) {
+                return false;
+            }
+        }
+
+        true
+    }
+
+    pub fn ray_intersects(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
+        for &coord in [ Coord::X, Coord::Y, Coord::Z ].iter() {
+            let dir_inverse = 1.0 / ray.dir[coord];
+            let mut t0 = dir_inverse * (self.bbl_corner[coord] - ray.origin[coord]);
+            let mut t1 = dir_inverse * (self.ftr_corner[coord] - ray.origin[coord]);
+
+            if dir_inverse < 0.0 {
+                std::mem::swap(&mut t0, &mut t1);
+            }
+
+            t_min = if t0 > t_min { t0 } else { t_min };
+            t_max = if t1 < t_max { t1 } else { t_max };
+
+            if math::f_leq(t_max, t_min) {
+                return false;
+            }
+        }
+
+        true
     }
 }
 
@@ -49,18 +72,15 @@ pub trait Hittable {
     fn surface_area(&self) -> f64;
 }
 
-pub trait BoundedHittable: Bounded + Hittable {}
+pub trait BoundedHittable: Bounded + Hittable + std::fmt::Debug {}
 
 pub struct HittableGroup<'a> {
-    hittables: Vec<&'a dyn BoundedHittable>,
-    kd_tree: accel::KDTreeMemoryArena<'a>
+    hittables: Vec<&'a dyn BoundedHittable>
 }
 
 impl HittableGroup<'_> {
     pub fn new(hittables: Vec<&dyn BoundedHittable>) -> HittableGroup {
-        let mut kd_tree = accel::KDTreeMemoryArena::new();
-        kd_tree.construct_tree(&hittables);
-        HittableGroup { hittables, kd_tree }
+        HittableGroup { hittables }
     }
 }
 
@@ -95,33 +115,16 @@ impl Bounded for Vec<&dyn BoundedHittable> {
         for obj in self {
             let obj_box = obj.bounding_box();
 
-            if &obj_box.ftr_corner[Coord::X] > &ftr_corner[Coord::X] {
-                ftr_corner[Coord::X] = obj_box.ftr_corner[Coord::X];
-            }
-            if &obj_box.ftr_corner[Coord::Y] > &ftr_corner[Coord::Y] {
-                ftr_corner[Coord::Y] = obj_box.ftr_corner[Coord::Y];
-            }
-            if &obj_box.ftr_corner[Coord::Z] > &ftr_corner[Coord::Z] {
-                ftr_corner[Coord::Z] = obj_box.ftr_corner[Coord::Z];
-            }
+            ftr_corner[Coord::X] = f64::max(ftr_corner[Coord::X], obj_box.ftr_corner[Coord::X]);
+            ftr_corner[Coord::Y] = f64::max(ftr_corner[Coord::Y], obj_box.ftr_corner[Coord::Y]);
+            ftr_corner[Coord::Z] = f64::max(ftr_corner[Coord::Z], obj_box.ftr_corner[Coord::Z]);
 
-            if &obj_box.bbl_corner[Coord::X] < &bbl_corner[Coord::X] {
-                bbl_corner[Coord::X] = obj_box.bbl_corner[Coord::X];
-            }
-            if &obj_box.bbl_corner[Coord::Y] < &bbl_corner[Coord::Y] {
-                bbl_corner[Coord::Y] = obj_box.bbl_corner[Coord::Y];
-            }
-            if &obj_box.bbl_corner[Coord::Z] < &bbl_corner[Coord::Z] {
-                bbl_corner[Coord::Z] = obj_box.bbl_corner[Coord::Z];
-            }
+            bbl_corner[Coord::X] = f64::min(bbl_corner[Coord::X], obj_box.bbl_corner[Coord::X]);
+            bbl_corner[Coord::Y] = f64::min(bbl_corner[Coord::Y], obj_box.bbl_corner[Coord::Y]);
+            bbl_corner[Coord::Z] = f64::min(bbl_corner[Coord::Z], obj_box.bbl_corner[Coord::Z]);
         }
 
-        let center = Point3::new(
-            0.5 * (bbl_corner[Coord::X] - ftr_corner[Coord::X]),
-            0.5 * (bbl_corner[Coord::Y] - ftr_corner[Coord::Y]),
-            0.5 * (bbl_corner[Coord::Z] - ftr_corner[Coord::Z])
-        );
-
+        let center = 0.5 * (&ftr_corner + &bbl_corner);
         AxisAlignedBoundingBox { ftr_corner, bbl_corner, center }
     }
 }
@@ -132,6 +135,7 @@ impl Bounded for HittableGroup<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct Sphere<'a> {
     center: Point3,
     radius: f64,
@@ -186,6 +190,7 @@ impl Bounded for Sphere<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct Plane<'a> {
     center: Point3,
     spanning_vecs: (Vec3, Vec3),
@@ -249,6 +254,7 @@ impl Bounded for Plane<'_> {
     }
 }
 
+#[derive(Debug)]
 pub struct Prism<'a> {
     center: Point3,
     spanning_vecs: (Vec3, Vec3, Vec3),
