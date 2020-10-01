@@ -1,29 +1,32 @@
 use std::fs::{ File };
 use std::io::{ prelude::{ Write, Seek }, SeekFrom };
 use std::path::Path;
+use std::sync::{ Arc, Mutex };
 use rand::distributions::Uniform;
 
 use camera::Camera;
 use geom::HittableGroup;
 use math::{ f_clamp, rand_f64, Rand };
+use threadpool::ThreadPool;
 use vec::ColorRGB;
 
-pub mod accel;
+// pub mod accel;
 pub mod camera;
 pub mod geom;
 pub mod material;
 pub mod math;
+pub mod threadpool;
 pub mod vec;
 pub use vec::colors;
 
 const MAX_COLORS: u32 = 255;
 
-pub struct ImageConfig<'a> {
+pub struct ImageConfig {
     pub width: u32,
     pub height: u32,
     pub samples: u32,
     pub max_depth: u32,
-    pub background: &'a dyn Fn(f64) -> ColorRGB
+    pub background: Arc<dyn Fn(f64) -> ColorRGB + Send + Sync>
 }
 
 /// Creates a String containing a PPM representation of a single pixel
@@ -67,7 +70,7 @@ pub fn create_ppm(world: &HittableGroup, camera: &Camera, config: &ImageConfig) 
 
                 let r = camera.ray(u, v, &mut rand);
 
-                color += r.get_color(world, config.background, max_depth, &mut rand);
+                color += r.get_color(world, &*config.background, max_depth, &mut rand);
             }
 
             ppm.push_str(&write_pixel(&color, samples));
@@ -79,6 +82,76 @@ pub fn create_ppm(world: &HittableGroup, camera: &Camera, config: &ImageConfig) 
 
     eprintln!("\nDone.");
     ppm
+}
+
+pub fn write_ppm_threaded(world: Arc<HittableGroup>, camera: Arc<Camera>, filename: &str, config: Arc<ImageConfig>) {
+    let width = config.width;
+    let height = config.height;
+    let samples = config.samples;
+    let max_depth = config.max_depth;
+
+    let sample_count = Arc::new(Mutex::new(0));
+    let pixels = Arc::new(Mutex::new(vec![]));
+    let mut file = File::create(&Path::new(filename)).unwrap();
+
+    let cpu_count = num_cpus::get();
+    eprintln!("Spawning thread pool with {} workers", cpu_count);
+    let mut pool = ThreadPool::new(cpu_count);
+
+    for s in 0..samples {
+        let sample_count = sample_count.clone();
+        let pixels = pixels.clone();
+        let world = world.clone();
+        let camera = camera.clone();
+        let bg_func = config.background.clone();
+
+        pool.execute(move || {
+            let zero_to_one = Uniform::from(0.0..1.0);
+            let rng = rand::thread_rng();
+            let mut rand = Rand { dist: zero_to_one, rng };
+
+            let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
+            for i in 0..height {
+                for j in 0..width {
+                    let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
+                    let v = ((i as f64) + rand_f64(&mut rand)) / f64::from(height - 1);
+
+                    let r = camera.ray(u, v, &mut rand);
+
+                    let pixel_num = j + (i * width);
+
+                    let ray_color = r.get_color(&world, &*bg_func, max_depth, &mut rand);
+
+                    let mut pixels = pixels.lock().unwrap();
+                    match (*pixels).get_mut(pixel_num as usize) {
+                        None => pixels.push(ray_color),
+                        Some(color) => *color += ray_color
+                    };
+                }
+            }
+
+            let pixels = pixels.lock().unwrap();
+            for pixel in &*pixels {
+                ppm.push_str(&write_pixel(&pixel, s));
+            }
+
+            let mut sample_count = sample_count.lock().unwrap();
+            *sample_count += 1;
+            eprint!("\r{} samples done", sample_count);
+        });
+    }
+
+    pool.finish_with(move || {
+        eprint!("\n");
+        let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
+        let pixels = pixels.lock().unwrap();
+        for pixel in &*pixels {
+            ppm.push_str(&write_pixel(&pixel, samples));
+        }
+
+        file.seek(SeekFrom::Start(0)).unwrap();
+        file.write_all(&ppm.as_bytes()).unwrap();
+    });
 }
 
 /// Similar to create_ppm, but performs one sample per pixel, writes to a file, and then performs
@@ -113,8 +186,8 @@ pub fn write_ppm(world: &HittableGroup, camera: &Camera, filename: &str, config:
                     pixels.push(colors::BLACK);
                 }
                 match pixels.get_mut(pixel_num as usize) {
-                    None => pixels.push(r.get_color(world, config.background, max_depth, &mut rand)),
-                    Some(color) => *color += r.get_color(world, config.background, max_depth, &mut rand)
+                    None => pixels.push(r.get_color(world, &*config.background, max_depth, &mut rand)),
+                    Some(color) => *color += r.get_color(world, &*config.background, max_depth, &mut rand)
                 };
 
                 eprint!("\r{}/{} pixels rendered", pixel_num + 1, total_pixels);

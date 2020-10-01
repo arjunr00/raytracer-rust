@@ -1,20 +1,21 @@
 use std::clone::Clone;
 use std::f64::consts;
+use std::sync::{ Arc };
 
 use super::math;
 use super::material::Material;
 use super::vec::{ Coord, Point3, Ray, Vec3 };
 
-pub struct Hit<'a> {
+pub struct Hit {
     pub point: Point3,
     pub normal: Vec3,
     pub t: f64,
     pub outer: bool,
-    pub material: &'a dyn Material
+    pub material: Arc<dyn Material>
 }
 
-impl Hit<'_> {
-    pub fn new(point: Point3, normal: Vec3, t: f64, outer: bool, material: &dyn Material) -> Hit {
+impl Hit {
+    pub fn new(point: Point3, normal: Vec3, t: f64, outer: bool, material: Arc<dyn Material>) -> Hit {
         Hit {
             point, t, outer, material,
             normal: if outer { normal.unit() } else { -normal.unit() }
@@ -72,19 +73,19 @@ pub trait Hittable {
     fn surface_area(&self) -> f64;
 }
 
-pub trait BoundedHittable: Bounded + Hittable + std::fmt::Debug {}
+pub trait BoundedHittable: Bounded + Hittable + Send + Sync + std::fmt::Debug {}
 
-pub struct HittableGroup<'a> {
-    hittables: Vec<&'a dyn BoundedHittable>
+pub struct HittableGroup {
+    hittables: Vec<Arc<dyn BoundedHittable>>
 }
 
-impl HittableGroup<'_> {
-    pub fn new(hittables: Vec<&dyn BoundedHittable>) -> HittableGroup {
+impl HittableGroup {
+    pub fn new(hittables: Vec<Arc<dyn BoundedHittable>>) -> HittableGroup {
         HittableGroup { hittables }
     }
 }
 
-impl Hittable for HittableGroup<'_> {
+impl Hittable for HittableGroup {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         let mut hit: Option<Hit> = None;
         let mut closest_t = t_max;
@@ -104,7 +105,7 @@ impl Hittable for HittableGroup<'_> {
     }
 }
 
-impl Bounded for Vec<&dyn BoundedHittable> {
+impl Bounded for Vec<Arc<dyn BoundedHittable>> {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         if self.len() == 0 {
             return AxisAlignedBoundingBox { ftr_corner: Point3::O, bbl_corner: Point3::O, center: Point3::O };
@@ -129,28 +130,28 @@ impl Bounded for Vec<&dyn BoundedHittable> {
     }
 }
 
-impl Bounded for HittableGroup<'_> {
+impl Bounded for HittableGroup {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         self.hittables.bounding_box()
     }
 }
 
 #[derive(Debug)]
-pub struct Sphere<'a> {
+pub struct Sphere {
     center: Point3,
     radius: f64,
-    material: &'a dyn Material
+    material: Arc<dyn Material>
 }
 
-impl Sphere<'_> {
-    pub fn new(center: Point3, radius: f64, material: &dyn Material) -> Sphere {
+impl Sphere {
+    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Sphere {
         Sphere { center, radius, material }
     }
 }
 
-impl BoundedHittable for Sphere<'_> {}
+impl BoundedHittable for Sphere {}
 
-impl Hittable for Sphere<'_> {
+impl Hittable for Sphere {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         let vec_to_center = &ray.origin - &self.center;
         let center_dot_self = ray.dir.dot(&vec_to_center);
@@ -167,11 +168,11 @@ impl Hittable for Sphere<'_> {
         if t1 < t_max && t1 > t_min {
             let normal = (ray.at(t1) - &self.center) * (1.0/self.radius);
             let outer = ray.dir.dot(&normal) < 0.0;
-            return Some(Hit::new(ray.at(t1), normal, t1, outer, self.material));
+            return Some(Hit::new(ray.at(t1), normal, t1, outer, self.material.clone()));
         } else if t2 < t_max && t2 > t_min {
             let normal = (ray.at(t2) - &self.center) * (1.0/self.radius);
             let outer = ray.dir.dot(&normal) < 0.0;
-            return Some(Hit::new(ray.at(t2), normal, t2, outer, self.material));
+            return Some(Hit::new(ray.at(t2), normal, t2, outer, self.material.clone()));
         }
 
         None
@@ -182,7 +183,7 @@ impl Hittable for Sphere<'_> {
     }
 }
 
-impl Bounded for Sphere<'_> {
+impl Bounded for Sphere {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + Point3::new(self.radius, self.radius, self.radius);
         let bbl_corner = &self.center - Point3::new(self.radius, self.radius, self.radius);
@@ -191,14 +192,14 @@ impl Bounded for Sphere<'_> {
 }
 
 #[derive(Debug)]
-pub struct Plane<'a> {
+pub struct Plane {
     center: Point3,
     spanning_vecs: (Vec3, Vec3),
-    material: &'a dyn Material
+    material: Arc<dyn Material>
 }
 
-impl Plane<'_> {
-    pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3), material: &dyn Material) -> Plane {
+impl Plane {
+    pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3), material: Arc<dyn Material>) -> Plane {
         let plane_i = spanning_vecs.0;
         let mut plane_j = spanning_vecs.1;
 
@@ -217,9 +218,9 @@ impl Plane<'_> {
     }
 }
 
-impl BoundedHittable for Plane<'_> {}
+impl BoundedHittable for Plane {}
 
-impl Hittable for Plane<'_> {
+impl Hittable for Plane {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         let plane_i = &self.spanning_vecs.0;
         let plane_j = &self.spanning_vecs.1;
@@ -235,7 +236,7 @@ impl Hittable for Plane<'_> {
             && math::f_leq(ctp_components.1.norm(), plane_j.norm())
         {
             let outer = ray.dir.dot(&normal) < 0.0;
-            Some(Hit::new(ray.at(t), normal, t, outer, self.material))
+            Some(Hit::new(ray.at(t), normal, t, outer, self.material.clone()))
         } else {
             None
         }
@@ -246,7 +247,7 @@ impl Hittable for Plane<'_> {
     }
 }
 
-impl Bounded for Plane<'_> {
+impl Bounded for Plane {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1;
         let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1;
@@ -255,14 +256,14 @@ impl Bounded for Plane<'_> {
 }
 
 #[derive(Debug)]
-pub struct Prism<'a> {
+pub struct Prism {
     center: Point3,
     spanning_vecs: (Vec3, Vec3, Vec3),
-    planes: [Plane<'a> ; 6]
+    planes: [Plane ; 6]
 }
 
-impl Prism<'_> {
-    pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3, Vec3), material: &dyn Material)
+impl Prism {
+    pub fn new(center: Point3, spanning_vecs: (Vec3, Vec3, Vec3), material: Arc<dyn Material>)
         -> Prism
     {
         let prism_i = &spanning_vecs.0;
@@ -270,22 +271,22 @@ impl Prism<'_> {
         let prism_k = &spanning_vecs.2;
 
         let front_face = Plane::new(
-            &center - prism_k, (prism_j.clone(), prism_i.clone()), material
+            &center - prism_k, (prism_j.clone(), prism_i.clone()), material.clone()
         );
         let back_face = Plane::new(
-            &center + prism_k, (prism_i.clone(), prism_j.clone()), material
+            &center + prism_k, (prism_i.clone(), prism_j.clone()), material.clone()
         );
         let top_face = Plane::new(
-            &center + prism_j, (prism_k.clone(), prism_i.clone()), material
+            &center + prism_j, (prism_k.clone(), prism_i.clone()), material.clone()
         );
         let bottom_face = Plane::new(
-            &center - prism_j, (prism_i.clone(), prism_k.clone()), material
+            &center - prism_j, (prism_i.clone(), prism_k.clone()), material.clone()
         );
         let left_face = Plane::new(
-            &center - prism_i, (prism_k.clone(), prism_j.clone()), material
+            &center - prism_i, (prism_k.clone(), prism_j.clone()), material.clone()
         );
         let right_face = Plane::new(
-            &center + prism_i, (prism_j.clone(), prism_k.clone()), material
+            &center + prism_i, (prism_j.clone(), prism_k.clone()), material.clone()
         );
 
         Prism {
@@ -295,9 +296,9 @@ impl Prism<'_> {
     }
 }
 
-impl BoundedHittable for Prism<'_> {}
+impl BoundedHittable for Prism {}
 
-impl Hittable for Prism<'_> {
+impl Hittable for Prism {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         let mut hit: Option<Hit> = None;
         let mut closest_t = t_max;
@@ -317,7 +318,7 @@ impl Hittable for Prism<'_> {
     }
 }
 
-impl Bounded for Prism<'_> {
+impl Bounded for Prism {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2;
         let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2;
@@ -334,7 +335,7 @@ mod tests {
     #[test]
     fn sphere_hit() {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, &mat_dif_white);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
             "Ray should have hit sphere but didn't.")
@@ -343,7 +344,7 @@ mod tests {
     #[test]
     fn sphere_miss() {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, &mat_dif_white);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &Vec3::J);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
             "Ray shouldn't have hit sphere but did.")
@@ -352,7 +353,7 @@ mod tests {
     #[test]
     fn sphere_inside_hit() {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
-        let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5, &mat_dif_white);
+        let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
         assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
             "Ray should have hit sphere but didn't.")
@@ -364,7 +365,7 @@ mod tests {
         let plane = Plane::new(
             Point3::new(0.0, 1.0, 0.0),
             (Vec3::I, -Vec3::K),
-            &mat_dif_white
+            Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &Vec3::J);
         assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
@@ -377,7 +378,7 @@ mod tests {
         let plane = Plane::new(
             Point3::new(0.0, 1.0, 0.0),
             (0.5 * Vec3::I, -0.5 * Vec3::K),
-            &mat_dif_white
+            Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &(Vec3::J + Vec3::I));
         assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_none(),

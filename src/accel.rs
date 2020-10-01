@@ -1,38 +1,39 @@
 use std::fmt::Debug;
+use std::sync::Arc;
 
 use super::geom::{ AxisAlignedBoundingBox, Bounded, BoundedHittable, Hit, Hittable };
 use super::math;
 use super::vec::{ Coord, Ray };
 
 #[derive(Debug)]
-struct KDTreeNode<'a> {
+struct KDTreeNode {
     node_index: usize,
-    node_data: KDTreeNodeData<'a>
+    node_data: KDTreeNodeData
 }
 
 #[derive(Debug)]
-pub struct KDTreeNodeData<'a> {
+pub struct KDTreeNodeData {
     bounding_box: AxisAlignedBoundingBox,
     children: (Option<usize>, Option<usize>),
-    hittables: Option<Vec<&'a dyn BoundedHittable>>
+    hittables: Option<Vec<Arc<dyn BoundedHittable>>>
 }
 
 #[derive(Debug)]
-pub struct KDTreeMemoryArena<'a> {
-    nodes: Vec<KDTreeNode<'a>>
+pub struct KDTreeMemoryArena {
+    nodes: Vec<KDTreeNode>
 }
 
-impl<'a> KDTreeMemoryArena<'a> {
+impl KDTreeMemoryArena {
     const MAX_DEPTH: u32 = 10;
     const MAX_HITTABLE_COUNT: usize = 4;
 
-    pub fn new(hittables: &Vec<&'a dyn BoundedHittable>) -> KDTreeMemoryArena<'a> {
+    pub fn new(hittables: &Vec<Arc<dyn BoundedHittable>>) -> KDTreeMemoryArena {
         let mut arena = KDTreeMemoryArena { nodes: vec![] };
         arena.construct_tree(hittables);
         arena
     }
 
-    pub fn construct_tree(&mut self, hittables: &Vec<&'a dyn BoundedHittable>) {
+    pub fn construct_tree(&mut self, hittables: &Vec<Arc<dyn BoundedHittable>>) {
         let local_hittables = hittables.to_vec();
         // TODO: choose better initial cut dimension based on extent
         self.construct_tree_helper(local_hittables, Coord::Z, 0);
@@ -45,7 +46,7 @@ impl<'a> KDTreeMemoryArena<'a> {
         }
     }
 
-    fn construct_tree_helper(&mut self, hittables: Vec<&'a dyn BoundedHittable>, coord: Coord, depth: u32)
+    fn construct_tree_helper(&mut self, hittables: Vec<Arc<dyn BoundedHittable>>, coord: Coord, depth: u32)
         -> Option<usize>
     {
         if hittables.len() == 0 {
@@ -67,10 +68,10 @@ impl<'a> KDTreeMemoryArena<'a> {
         let mut local_hittables = hittables.to_vec();
         local_hittables.remove(median_index);
 
-        let mut hittables_left: Vec<&dyn BoundedHittable> = (&local_hittables).into_iter().filter(|obj| {
+        let mut hittables_left: Vec<_> = (&local_hittables).into_iter().filter(|obj| {
             math::f_leq(obj.bounding_box().center[coord], split_point[coord])
         }).map(|obj| *obj).collect();
-        let mut hittables_right: Vec<&dyn BoundedHittable> = (&local_hittables).into_iter().filter(|obj| {
+        let mut hittables_right: Vec<_> = (&local_hittables).into_iter().filter(|obj| {
             obj.bounding_box().center[coord] > split_point[coord]
         }).map(|obj| *obj).collect();
 
@@ -109,7 +110,7 @@ impl<'a> KDTreeMemoryArena<'a> {
         }
     }
 
-    fn median_hittable(hittables: &Vec<&'a dyn BoundedHittable>, coord: Coord) -> (&'a dyn BoundedHittable, usize)
+    fn median_hittable(hittables: &Vec<Arc<dyn BoundedHittable>>, coord: Coord) -> (Arc<dyn BoundedHittable>, usize)
     {
         let mut local_hittables = hittables.to_vec();
         local_hittables.sort_by(|a, b| {
@@ -118,7 +119,7 @@ impl<'a> KDTreeMemoryArena<'a> {
         (local_hittables[hittables.len() / 2], hittables.len() / 2)
     }
 
-    fn insert(&mut self, node: KDTreeNodeData<'a>) -> usize {
+    fn insert(&mut self, node: KDTreeNodeData) -> usize {
         let next_index = self.nodes.len();
         self.nodes.push(KDTreeNode {
             node_index: next_index,
@@ -164,7 +165,7 @@ impl<'a> KDTreeMemoryArena<'a> {
     }
 }
 
-impl Hittable for KDTreeMemoryArena<'_> {
+impl Hittable for KDTreeMemoryArena {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
         self.node_is_hit(self.nodes.len() - 1, ray, t_min, t_max)
     }

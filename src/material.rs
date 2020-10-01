@@ -8,7 +8,7 @@ pub trait MaterialBase {
     fn emit(&self) -> ColorRGB { colors::BLACK }
 }
 
-pub trait Material: MaterialBase + std::fmt::Debug {}
+pub trait Material: MaterialBase + Send + Sync + std::fmt::Debug {}
 
 #[derive(Debug)]
 pub struct DiffuseLambert {
