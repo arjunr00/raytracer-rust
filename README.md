@@ -1,7 +1,6 @@
 # Rust Raytracer
 
 Figured a raytracer would be a fun way to learn how to use Rust.
-I'm using [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html) as a guide.
 
 ## Dependencies
 * Rust and Cargo. Just install `rustup` from [here](https://www.rust-lang.org/tools/install) and it'll install the whole Rust toolchain.
@@ -39,3 +38,12 @@ Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) re
 512x512 with 10,000 samples per pixel and a maximum of 500 bounces took ~1 hour and 44 minutes on an 8-core i7 CPU (as opposed to just over 4 hours and 15 minutes on only one of those cores):
 
 ![cornell](https://user-images.githubusercontent.com/30734384/94758047-1cd3ee80-036a-11eb-9b87-1f7468f1f8e6.png)
+
+## How it works
+
+TODO
+
+## Resources
+
+* [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
+* [Physically Based Rendering: From Theory to Implementation](https://pbrt.org/)
