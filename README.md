@@ -36,6 +36,6 @@ Here's a lower-resolution (320x240) animation to show off reflection and refract
 ![animation](https://user-images.githubusercontent.com/30734384/94495092-dd1cd380-01be-11eb-9ada-fd34f5da4549.gif)
 
 Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render (it's not perfect, as you can see from the weird lighting on the front of the boxes, but it's something).
-360x360 with 10,000 samples per pixel and a maximum of 500 bounces took ~54 minutes on an 8-core i7 CPU:
+512x512 with 10,000 samples per pixel and a maximum of 500 bounces took ~1 hour and 44 minutes on an 8-core i7 CPU (as opposed to just over 4 hours and 15 minutes on only one of those cores):
 
-![cornell](https://user-images.githubusercontent.com/30734384/94751915-c65db480-0357-11eb-8d6e-a49952c5b2f2.png)
+![cornell](https://user-images.githubusercontent.com/30734384/94758047-1cd3ee80-036a-11eb-9b87-1f7468f1f8e6.png)
