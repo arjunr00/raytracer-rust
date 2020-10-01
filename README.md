@@ -7,14 +7,17 @@ I'm using [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTra
 * Rust and Cargo. Just install `rustup` from [here](https://www.rust-lang.org/tools/install) and it'll install the whole Rust toolchain.
 
 ## How to build and run
-**NOTE: These instructions are outdated, will update soon.**
-For a static image, just run `cargo run --release > something.ppm`.
-Don't forget the redirect, because this currently outputs PPM data to your terminal's standard out.
-
-If you want to generate an animation, comment out `src/main:44-47` and uncomment `src/main:50-71`, then run `cargo run --release`.
-No redirection this time; the frames are generated in the `frames/` directory.
-
 Run `cargo build` or `cargo build --release` if you just want to compile without running.
+
+In `src/main.rs` there are currently two available scenes you can render:
+1. A basic scene with a diffuse sphere, a reflective sphere, a glass sphere, and a diffuse plane.
+2. A [Cornell box](https://www.graphics.cornell.edu/online/box/data.html)
+
+Just run `cargo run --release [1|2]` to render one of these.
+(You can add `animate` at the end if you're rendering 1 to output a series of frames of an animated camera pivoting about the center of the scene to a subdirectory named `frames/`).
+
+By default, this code will run on all available threads.
+You can go into `src/main.rs` and comment and uncomment the appropriate code to change this.
 
 ## How to test
 Run `cargo test`.
@@ -32,7 +35,7 @@ Here's a lower-resolution (320x240) animation to show off reflection and refract
 
 ![animation](https://user-images.githubusercontent.com/30734384/94495092-dd1cd380-01be-11eb-9ada-fd34f5da4549.gif)
 
-Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render (approximately---the sides of the box in this render are in fact perfectly perpendicular, and the "outside" in front of the box offers some illumination, which is why it looks a little off in my opinion).
-512x512 with 10,000 samples per pixel and a maximum of 500 bounces took ~4 hours and 15 minutes:
+Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render (it's not perfect, as you can see from the weird lighting on the front of the boxes, but it's something).
+360x360 with 10,000 samples per pixel and a maximum of 500 bounces took ~54 minutes on an 8-core i7 CPU:
 
-![cornell](https://user-images.githubusercontent.com/30734384/94492370-26b5f000-01b8-11eb-87b6-974427258016.png)
+![cornell](https://user-images.githubusercontent.com/30734384/94751915-c65db480-0357-11eb-8d6e-a49952c5b2f2.png)
