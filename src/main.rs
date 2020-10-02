@@ -151,7 +151,7 @@ fn render_scene_2() {
     let fov_deg = 37.0;
     let aperture = 0.0;
     let samples = 10000;
-    let max_depth = 500;
+    let max_depth = 50;
 
     let background = |_| {
         colors::BLACK
@@ -162,13 +162,13 @@ fn render_scene_2() {
         background: Arc::new(background)
     };
     let camera =
-        Camera::new(Point3::new(278.0, 273.0, -800.0), &Point3::new(278.0, 273.0, 800.0),
+        Camera::new(Point3::new(278.0, 273.0, -800.0), &Point3::new(278.0, 273.0, 0.0),
             fov_deg, aperture, out_width, out_height);
 
     let mat_dif_white = Arc::new(material::DiffuseLambert::new(ColorRGB::new(1.0, 1.0, 1.0)));
     let mat_dif_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.57, 0.025, 0.025)));
     let mat_dif_green = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.025, 0.236, 0.025)));
-    let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 0.67, 0.21), 16.0));
+    let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 0.67, 0.21), 15.0));
 
     let floor = Plane::new(
         Point3::new(278.0, 0.0, 279.6),

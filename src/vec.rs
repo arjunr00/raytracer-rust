@@ -64,6 +64,7 @@ impl Ray {
                         Some(scattered) => {
                             ray = scattered;
                             color *= hit.material.attenuation();
+                            color += hit.material.emit();
                         }
                     }
                 }
