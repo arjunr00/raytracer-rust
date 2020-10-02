@@ -1,9 +1,9 @@
 use std::fmt::Debug;
 use std::sync::Arc;
 
-use super::geom::{ AxisAlignedBoundingBox, Bounded, BoundedHittable, Hit, Hittable };
-use super::math;
-use super::vec::{ Coord, Ray };
+use super::super::geom::{ AxisAlignedBoundingBox, Bounded, BoundedHittable, Hit, Hittable };
+use super::super::math;
+use super::super::vec::{ Coord, Ray };
 
 #[derive(Debug)]
 struct KDTreeNode {

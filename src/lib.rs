@@ -10,7 +10,7 @@ use math::{ f_clamp, rand_f64, Rand };
 use threadpool::ThreadPool;
 use vec::ColorRGB;
 
-// pub mod accel;
+pub mod accel;
 pub mod camera;
 pub mod geom;
 pub mod material;
