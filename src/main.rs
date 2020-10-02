@@ -7,7 +7,11 @@ use std::sync::Arc;
 
 use raytracer::{
     camera::Camera,
-    geom::{ HittableGroup, Plane, Sphere, Prism },
+    geom::{
+        World,
+        primitives::{ Plane, Sphere },
+        objects::{ Prism }
+    },
     vec::{ colors, ColorRGB, Point3, Vec3 },
     math,
     material
@@ -81,7 +85,7 @@ fn render_scene_1(render_type: RenderType) {
         mat_dif_soft_gray.clone()
     );
 
-    let world = HittableGroup::new(vec![
+    let world = World::new(vec![
         Arc::new(ground),
         Arc::new(red_ball),
         Arc::new(glass_ball),
@@ -213,7 +217,7 @@ fn render_scene_2() {
         mat_dif_white.clone()
     );
 
-    let world = HittableGroup::new(vec![
+    let world = World::new(vec![
         Arc::new(floor),
         Arc::new(back_wall),
         Arc::new(right_wall),

@@ -1,4 +1,4 @@
-use super::geom::Hit;
+use super::geom::hit::Hit;
 use super::math::{ Rand, f_clamp };
 use super::vec::{ colors, Ray, ColorRGB, Vec3 };
 

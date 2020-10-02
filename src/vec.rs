@@ -2,7 +2,10 @@ use rand::distributions::Distribution;
 use std::{ ops::{self}, clone, cmp, fmt };
 
 use super::math;
-use super::geom::{ Hittable, HittableGroup };
+use super::geom::{
+    World,
+    hit::Hittable,
+};
 
 /// A struct for a 3-dimensional floating-point vector
 #[derive(Debug)]
@@ -42,7 +45,7 @@ impl Ray {
         &self.origin + &(t * &self.dir)
     }
 
-    pub fn get_color(&self, world: &HittableGroup, bg: &dyn Fn(f64) -> ColorRGB, depth: u32, rand: &mut math::Rand)
+    pub fn get_color(&self, world: &World, bg: &dyn Fn(f64) -> ColorRGB, depth: u32, rand: &mut math::Rand)
         -> ColorRGB
     {
         let mut color = colors::WHITE;
