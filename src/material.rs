@@ -44,9 +44,8 @@ impl Material for DiffuseLambert {}
 impl MaterialBase for DiffuseLambert {
     fn scatter(&self, _: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray>
     {
-        let mut random_vec = Vec3::random_unit(rand);
-        if random_vec.dot(&hit.normal) < 0.0 { random_vec *= -1.0; }
-        let dir = &hit.normal + random_vec;
+        let random_unit = Vec3::random_unit(rand);
+        let dir = &hit.normal + random_unit;
         Some(Ray::new(&hit.point, &dir))
     }
 
