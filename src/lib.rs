@@ -89,9 +89,10 @@ pub fn write_ppm_threaded(world: Arc<HittableGroup>, camera: Arc<Camera>, filena
     let height = config.height;
     let samples = config.samples;
     let max_depth = config.max_depth;
+    let total_pixel_count = width * height;
 
     let sample_count = Arc::new(Mutex::new(0));
-    let pixels = Arc::new(Mutex::new(vec![]));
+    let pixels = Arc::new(Mutex::new(vec![colors::BLACK; total_pixel_count as usize]));
     let mut file = File::create(&Path::new(filename)).unwrap();
 
     let cpu_count = num_cpus::get();
@@ -112,22 +113,32 @@ pub fn write_ppm_threaded(world: Arc<HittableGroup>, camera: Arc<Camera>, filena
 
             let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
             for i in 0..height {
+                let pixels_mutex = pixels.lock().unwrap();
+
+                let slice_start = (i * width) as usize;
+                let slice_end = ((i + 1) * width) as usize;
+                let slice = &pixels_mutex[slice_start..slice_end];
+
+                let mut scanline = vec![colors::BLACK; slice.len()];
+                scanline.clone_from_slice(slice);
+
+                std::mem::drop(pixels_mutex); // Release mutex
+
                 for j in 0..width {
                     let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
                     let v = ((i as f64) + rand_f64(&mut rand)) / f64::from(height - 1);
 
                     let r = camera.ray(u, v, &mut rand);
 
-                    let pixel_num = j + (i * width);
-
                     let ray_color = r.get_color(&world, &*bg_func, max_depth, &mut rand);
 
-                    let mut pixels = pixels.lock().unwrap();
-                    match (*pixels).get_mut(pixel_num as usize) {
-                        None => pixels.push(ray_color),
-                        Some(color) => *color += ray_color
-                    };
+                    if let Some(color) = scanline.get_mut(j as usize) {
+                        *color += ray_color
+                    }
                 }
+
+                let mut pixels = pixels.lock().unwrap();
+                (*pixels).splice(slice_start..slice_end, scanline);
             }
 
             let pixels = pixels.lock().unwrap();
