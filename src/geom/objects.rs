@@ -81,6 +81,6 @@ impl Bounded for Prism {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2;
         let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2;
-        AxisAlignedBoundingBox { ftr_corner, bbl_corner, center: self.center.clone() }
+        AxisAlignedBoundingBox::new(ftr_corner, bbl_corner)
     }
 }

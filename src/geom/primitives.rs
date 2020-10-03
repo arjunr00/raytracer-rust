@@ -65,7 +65,7 @@ impl Bounded for Sphere {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + Point3::new(self.radius, self.radius, self.radius);
         let bbl_corner = &self.center - Point3::new(self.radius, self.radius, self.radius);
-        AxisAlignedBoundingBox { ftr_corner, bbl_corner, center: self.center.clone() }
+        AxisAlignedBoundingBox::new(ftr_corner, bbl_corner)
     }
 }
 
@@ -129,7 +129,7 @@ impl Bounded for Plane {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1;
         let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1;
-        AxisAlignedBoundingBox { ftr_corner, bbl_corner, center: self.center.clone() }
+        AxisAlignedBoundingBox::new(ftr_corner, bbl_corner)
     }
 }
 
