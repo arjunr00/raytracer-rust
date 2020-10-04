@@ -34,8 +34,9 @@ where
 }
 
 /// TODO: Find the median of a list in O(n) time
-// pub fn median<T>(vec: Vec<T>) -> T {
-// }
+pub fn median<T>(_vec: Vec<T>) -> T {
+    todo!();
+}
 
 /// Clamp a value between a minimum and maximum
 pub fn f_clamp(val: f64, min: f64, max: f64) -> f64 {
@@ -51,6 +52,36 @@ pub fn rand_f64(rand: &mut Rand) -> f64 {
 pub fn schlick(cos_theta_i: f64, index_i: f64, index_r: f64) -> f64 {
     let r_0 = ((index_i - index_r) / (index_i + index_r)).powi(2);
     r_0 + (1.0 - r_0) * (1.0 - cos_theta_i).powi(5)
+}
+
+/// Find the max of more than two values
+pub fn f_max_all(floats: Vec<f64>) -> f64 {
+    let max = floats.get(0);
+    if let Some(max) = max {
+        let mut max = *max;
+        for f in floats {
+            max = f64::max(max, f);
+        }
+
+        return max;
+    }
+
+    f64::INFINITY
+}
+
+/// Find the min of more than two values
+pub fn f_min_all(floats: Vec<f64>) -> f64 {
+    let min = floats.get(0);
+    if let Some(min) = min {
+        let mut min = *min;
+        for f in floats {
+            min = f64::min(min, f);
+        }
+
+        return min;
+    }
+
+    f64::INFINITY
 }
 
 #[cfg(test)]
