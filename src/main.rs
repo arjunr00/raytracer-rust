@@ -291,7 +291,7 @@ fn render_scene_3() {
 
     let mut red_balls: HittableRefs = vec![Arc::new(ground)];
     let mut rng = rand::thread_rng();
-    for i in 0..500 {
+    for i in 0..1000 {
         let rand_x: f64 = -(rng.gen::<f64>() * 50.0) + 25.0;
         let rand_z: f64 = -(rng.gen::<f64>() * 50.0);
         let material = materials[i % materials.len()].clone();
@@ -302,7 +302,6 @@ fn render_scene_3() {
     }
 
     let world = World::new(red_balls);
-
 
     let camera =
         Camera::new(Point3::new(0.7, 2.0, 3.0), &Point3::new(0.0, 0.0, -10.0),
