@@ -4,9 +4,9 @@ frames/
 *.ppm
 
 ## Temp files
-temp*
-cornell*
-balls*
+*.png
+*.gif
+!examples/*
 
 ## Vim files
 .*swp

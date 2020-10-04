@@ -24,27 +24,22 @@ Run `cargo test` to run some basic sanity unit tests.
 
 ## What it looks like
 
-The following images were produced (unless otherwise specified) using all 8-cores of my laptop's i7-8550U and a [bounding volume hierarchy](https://www.wikiwand.com/en/Bounding_volume_hierarchy) as an acceleration structure.
+The following images were produced (unless otherwise specified) using all 8 cores of my laptop's i7-8550U and a [bounding volume hierarchy](https://www.wikiwand.com/en/Bounding_volume_hierarchy) as an acceleration structure.
 
-640x480 with 100 samples per pixel and a maximum of 50 bounces takes ~12 seconds:
+Below is an animation of a camera pivoting around a transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.3, and diffuse plane.
+120 frames of 640x480 images with 100 samples per pixel and a maximum of 50 bounces per ray took about 24 minutes:
 
-![raytracer](https://user-images.githubusercontent.com/30734384/94495091-dbeba680-01be-11eb-9887-86fb676e1fe0.png)
-
-From left to right: transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.3, and diffuse plane.
-
-Here's a lower-resolution (320x240) animation to show off reflection and refraction. The 640x480 version of this took about 35.7 minutes to render 120 frames, so averaging about 17.8 seconds per frame.
-
-![animation](https://user-images.githubusercontent.com/30734384/94495092-dd1cd380-01be-11eb-9ada-fd34f5da4549.gif)
+![raytracer](examples/temp.gif)
 
 Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render.
 512x512 with 10,000 samples per pixel and a maximum of 50 bounces took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
 
-![cornell](https://user-images.githubusercontent.com/30734384/95023677-5e0b1d80-064c-11eb-9632-f6018e198254.png)
+![cornell](examples/cornell.png)
 
 And here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
 This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
 
-![balls](https://user-images.githubusercontent.com/30734384/95020130-542aef80-0637-11eb-97d0-dc3e74f49b5a.png)
+![balls](examples/balls.png)
 
 ## How it works
 
