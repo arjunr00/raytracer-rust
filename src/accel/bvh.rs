@@ -1,4 +1,5 @@
 use std::cmp::Ordering;
+use std::fmt;
 
 use crate::geom::hit::{
     AxisAlignedBoundingBox,
@@ -233,5 +234,19 @@ impl Hittable for BVH {
         }
 
         hit
+    }
+}
+
+impl fmt::Display for BVHNode {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        match self.children_indices {
+            Some((left, right)) => write!(f, "({}, {})", left, right),
+            None => {
+                match self.object_indices {
+                    Some((start, end)) => write!(f, "[{}-{}]", start, end),
+                    None => write!(f, "Invalid node")
+                }
+            }
+        }
     }
 }
