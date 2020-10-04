@@ -230,8 +230,14 @@ impl ops::Add<&Vec3> for &Vec3 {
     }
 }
 
-impl ops::AddAssign for Vec3 {
+impl ops::AddAssign<Vec3> for Vec3 {
     fn add_assign(&mut self, other: Vec3) {
+        *self = Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
+    }
+}
+
+impl ops::AddAssign<&Vec3> for Vec3 {
+    fn add_assign(&mut self, other: &Vec3) {
         *self = Vec3::new(self.0 + other.0, self.1 + other.1, self.2 + other.2)
     }
 }
