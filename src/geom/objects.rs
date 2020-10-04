@@ -11,7 +11,8 @@ use super::hit::{
 use super::primitives::Plane;
 
 use crate::material::Material;
-use crate::vec::{ Point3, Ray, Vec3 };
+use crate::math;
+use crate::vec::{ Coord, Point3, Ray, Vec3 };
 
 #[derive(Debug)]
 pub struct Prism {
@@ -59,17 +60,7 @@ impl BoundedHittable for Prism {}
 
 impl Hittable for Prism {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        let mut hit: Option<Hit> = None;
-        let mut closest_t = t_max;
-
-        for obj in self.primitives.hittables() {
-            if let Some(obj_hit) = obj.is_hit(ray, t_min, closest_t) {
-                closest_t = obj_hit.t;
-                hit = Some(obj_hit);
-            }
-        }
-
-        hit
+        self.primitives.is_hit(ray, t_min, t_max)
     }
 
     fn surface_area(&self) -> f64 {
@@ -79,8 +70,60 @@ impl Hittable for Prism {
 
 impl Bounded for Prism {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
-        let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2;
-        let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2;
-        AxisAlignedBoundingBox::new(ftr_corner, bbl_corner)
+        let spans = (
+             &self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2,
+             &self.spanning_vecs.0 + &self.spanning_vecs.1 - &self.spanning_vecs.2,
+             &self.spanning_vecs.0 - &self.spanning_vecs.1 + &self.spanning_vecs.2,
+             &self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2,
+            -&self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2,
+            -&self.spanning_vecs.0 + &self.spanning_vecs.1 - &self.spanning_vecs.2,
+            -&self.spanning_vecs.0 - &self.spanning_vecs.1 + &self.spanning_vecs.2,
+            -&self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2
+        );
+
+        let ftr_corner = &self.center + Point3::new(
+            math::f_max_all(vec![
+                spans.0[Coord::X], spans.1[Coord::X],
+                spans.2[Coord::X], spans.3[Coord::X],
+                spans.4[Coord::X], spans.5[Coord::X],
+                spans.6[Coord::X], spans.7[Coord::X]
+            ]),
+            math::f_max_all(vec![
+                spans.0[Coord::Y], spans.1[Coord::Y],
+                spans.2[Coord::Y], spans.3[Coord::Y],
+                spans.4[Coord::Y], spans.5[Coord::Y],
+                spans.6[Coord::Y], spans.7[Coord::Y]
+            ]),
+            math::f_max_all(vec![
+                spans.0[Coord::Z], spans.1[Coord::Z],
+                spans.2[Coord::Z], spans.3[Coord::Z],
+                spans.4[Coord::Z], spans.5[Coord::Z],
+                spans.6[Coord::Z], spans.7[Coord::Z]
+            ]),
+        );
+
+        let bbl_corner = &self.center + Point3::new(
+            math::f_min_all(vec![
+                spans.0[Coord::X], spans.1[Coord::X],
+                spans.2[Coord::X], spans.3[Coord::X],
+                spans.4[Coord::X], spans.5[Coord::X],
+                spans.6[Coord::X], spans.7[Coord::X]
+            ]),
+            math::f_min_all(vec![
+                spans.0[Coord::Y], spans.1[Coord::Y],
+                spans.2[Coord::Y], spans.3[Coord::Y],
+                spans.4[Coord::Y], spans.5[Coord::Y],
+                spans.6[Coord::Y], spans.7[Coord::Y]
+            ]),
+            math::f_min_all(vec![
+                spans.0[Coord::Z], spans.1[Coord::Z],
+                spans.2[Coord::Z], spans.3[Coord::Z],
+                spans.4[Coord::Z], spans.5[Coord::Z],
+                spans.6[Coord::Z], spans.7[Coord::Z]
+            ]),
+        );
+
+        let bound = AxisAlignedBoundingBox::new(ftr_corner, bbl_corner);
+        bound
     }
 }

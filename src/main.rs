@@ -248,7 +248,6 @@ fn render_scene_2() {
     let world_arc = Arc::new(world);
     let camera_arc = Arc::new(camera);
     let config_arc = Arc::new(config);
-
     raytracer::write_ppm_threaded(world_arc, camera_arc, "cornell.ppm", config_arc);
 
     // Uncomment to watch render live
