@@ -113,10 +113,7 @@ pub fn write_ppm_threaded(world: Arc<World>, camera: Arc<Camera>, filename: &str
 
             let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
             for i in 0..height {
-                let slice_start = (i * width) as usize;
-                let slice_end = ((i + 1) * width) as usize;
-
-                let mut scanline = vec![colors::BLACK; slice_end - slice_start];
+                let mut scanline = vec![colors::BLACK; width as usize];
 
                 for j in 0..width {
                     let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
@@ -125,12 +122,11 @@ pub fn write_ppm_threaded(world: Arc<World>, camera: Arc<Camera>, filename: &str
                     let r = camera.ray(u, v, &mut rand);
 
                     let ray_color = r.get_color(&world, &*bg_func, max_depth, &mut rand);
-
-                    if let Some(color) = scanline.get_mut(j as usize) {
-                        *color += ray_color
-                    }
+                    scanline[j as usize] += ray_color
                 }
 
+                let slice_start = (i * width) as usize;
+                let slice_end = ((i + 1) * width) as usize;
                 let mut pixels = pixels.lock().unwrap();
                 for (i, pixel) in pixels[slice_start..slice_end].iter().enumerate() {
                     scanline[i] += pixel;

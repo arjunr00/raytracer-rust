@@ -84,13 +84,14 @@ impl AxisAlignedBoundingBox {
         true
     }
 
-    pub fn ray_intersects(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> Option<(f64, f64)> {
+    pub fn ray_intersects(&self, ray: &Ray, dir_inverse: &Vec3, mut t_min: f64, mut t_max: f64) -> Option<(f64, f64)> {
+        let t0_vec = dir_inverse * (&self.bbl_corner - &ray.origin);
+        let t1_vec = dir_inverse * (&self.ftr_corner - &ray.origin);
         for &coord in [ Coord::X, Coord::Y, Coord::Z ].iter() {
-            let dir_inverse = 1.0 / ray.dir[coord];
-            let mut t0 = dir_inverse * (self.bbl_corner[coord] - ray.origin[coord]);
-            let mut t1 = dir_inverse * (self.ftr_corner[coord] - ray.origin[coord]);
+            let mut t0 = t0_vec[coord];
+            let mut t1 = t1_vec[coord];
 
-            if dir_inverse < 0.0 {
+            if dir_inverse[coord] < 0.0 {
                 std::mem::swap(&mut t0, &mut t1);
             }
 
@@ -181,19 +182,6 @@ impl HittableGroup {
 
 impl Hittable for HittableGroup {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        /*
-        let mut hit: Option<Hit> = None;
-        let mut closest_t = t_max;
-
-        for obj in self.accel.objects() {
-            if let Some(obj_hit) = obj.is_hit(ray, t_min, closest_t) {
-                closest_t = obj_hit.t;
-                hit = Some(obj_hit);
-            }
-        }
-
-        hit
-        */
         self.accel.is_hit(ray, t_min, t_max)
     }
 
