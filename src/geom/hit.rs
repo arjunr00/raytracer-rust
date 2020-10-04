@@ -195,3 +195,83 @@ impl Bounded for HittableGroup {
         AxisAlignedBoundingBox::union_from_objs(self.hittables())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::math::f_eq;
+
+    #[test]
+    fn box_surface_area() {
+        let bound = AxisAlignedBoundingBox::new(
+            Point3::O, Point3::new(-1.0, -2.3, -4.2)
+        );
+        assert!(f_eq(bound.surface_area(), 32.32));
+    }
+
+    #[test]
+    fn box_volume() {
+        let bound = AxisAlignedBoundingBox::new(
+            Point3::O, Point3::new(-1.0, -2.3, -4.2)
+        );
+        assert!(f_eq(bound.volume(), 9.66));
+    }
+
+    #[test]
+    fn boxes_overlap() {
+        let bounds = (
+            AxisAlignedBoundingBox::new(
+                Point3::O, Point3::new(-1.0, -2.3, -4.2)
+            ),
+            AxisAlignedBoundingBox::new(
+                Point3::new(0.5, 1.0, 0.2), Point3::new(-0.5, -3.1, -1.0)
+            )
+        );
+
+        assert!(bounds.0.box_intersects(bounds.1));
+    }
+
+    #[test]
+    fn boxes_no_overlap() {
+        let bounds = (
+            AxisAlignedBoundingBox::new(
+                Point3::O, Point3::new(-1.0, -2.3, -4.2)
+            ),
+            AxisAlignedBoundingBox::new(
+                Point3::new(1.0, 2.3, 4.2), Point3::new(0.1, 1.0, 1.0)
+            )
+        );
+
+        assert!(!bounds.0.box_intersects(bounds.1));
+    }
+
+    #[test]
+    fn ray_intersects_box() {
+        let bound = AxisAlignedBoundingBox::new(
+            Point3::O, Point3::new(-1.0, -2.3, -4.2)
+        );
+        let ray = Ray::new(&Point3::new(1.0, 2.0, 2.0), &Vec3::new(-1.0, -2.3, -4.2));
+        let dir_inverse = Vec3::new(
+            1.0 / ray.dir[Coord::X],
+            1.0 / ray.dir[Coord::Y],
+            1.0 / ray.dir[Coord::Z]
+        );
+
+        assert!(bound.ray_intersects(&ray, &dir_inverse, 0.01, f64::INFINITY).is_some());
+    }
+
+    #[test]
+    fn ray_no_intersects_box() {
+        let bound = AxisAlignedBoundingBox::new(
+            Point3::O, Point3::new(-1.0, -2.3, -4.2)
+        );
+        let ray = Ray::new(&Point3::new(3.0, 2.0, 4.0), &Vec3::new(0.8, 3.0, 4.0));
+        let dir_inverse = Vec3::new(
+            1.0 / ray.dir[Coord::X],
+            1.0 / ray.dir[Coord::Y],
+            1.0 / ray.dir[Coord::Z]
+        );
+
+        assert!(bound.ray_intersects(&ray, &dir_inverse, 0.01, f64::INFINITY).is_none());
+    }
+}
