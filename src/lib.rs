@@ -113,16 +113,10 @@ pub fn write_ppm_threaded(world: Arc<World>, camera: Arc<Camera>, filename: &str
 
             let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
             for i in 0..height {
-                let pixels_mutex = pixels.lock().unwrap();
-
                 let slice_start = (i * width) as usize;
                 let slice_end = ((i + 1) * width) as usize;
-                let slice = &pixels_mutex[slice_start..slice_end];
 
-                let mut scanline = vec![colors::BLACK; slice.len()];
-                scanline.clone_from_slice(slice);
-
-                std::mem::drop(pixels_mutex); // Release mutex
+                let mut scanline = vec![colors::BLACK; slice_end - slice_start];
 
                 for j in 0..width {
                     let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
@@ -138,6 +132,9 @@ pub fn write_ppm_threaded(world: Arc<World>, camera: Arc<Camera>, filename: &str
                 }
 
                 let mut pixels = pixels.lock().unwrap();
+                for (i, pixel) in pixels[slice_start..slice_end].iter().enumerate() {
+                    scanline[i] += pixel;
+                }
                 (*pixels).splice(slice_start..slice_end, scanline);
             }
 
