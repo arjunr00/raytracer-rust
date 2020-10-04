@@ -7,7 +7,7 @@ use crate::geom::hit::{
     HittableRefs
 };
 use crate::math;
-use crate::vec::{ Coord, Ray };
+use crate::vec::{ Coord, Ray, Vec3 };
 
 #[derive(Debug)]
 struct BVHNode {
@@ -44,7 +44,7 @@ impl BVH {
         let num_objs = end - start;
         let bounds = AxisAlignedBoundingBox::union_from_objs(&objs);
 
-        if num_objs <= 4 {
+        if num_objs == 1 {
             self.add_leaf_node((start, end), bounds)
         } else {
             let centroids_iter: Vec<_>
@@ -57,13 +57,16 @@ impl BVH {
             if math::f_eq(centroids_bounds.volume(), 0.0) {
                 self.add_leaf_node((start, end), bounds)
             } else {
-                if num_objs <= 8 {
+                if num_objs <= 4 {
                     let mid_obj = objs[mid - start].clone();
                     let mut partitions = objs.iter().partition::<Vec<_>, _>(|a| {
                         a.centroid()[split_axis] < mid_obj.centroid()[split_axis]
                     });
                     partitions.0.append(&mut partitions.1);
-                    // self.objects = partitions.0.iter().map(|arc| (*arc).clone()).collect::<Vec<_>>();
+                    self.objects.splice(
+                        start..end,
+                        partitions.0.iter().map(|arc| (*arc).clone())
+                    );
                 } else {
                     // Use surface area heuristic to partition
                     const NUM_BUCKETS: usize = 12;
@@ -106,7 +109,7 @@ impl BVH {
 
                     let min_cost = bucket_costs.iter().enumerate().min_by(
                         |a, b| a.1.partial_cmp(&b.1).unwrap_or_else(|| Ordering::Equal)
-                    ).unwrap_or_else(|| (0, &0.0));
+                    ).unwrap();
 
                     let leaf_cost = num_objs as f64;
                     if min_cost.1 < &leaf_cost {
@@ -122,7 +125,10 @@ impl BVH {
 
                         mid = start + partitions.0.len();
                         partitions.0.append(&mut partitions.1);
-                        // self.objects = partitions.0.iter().map(|arc| (*arc).clone()).collect::<Vec<_>>();
+                        self.objects.splice(
+                            start..end,
+                            partitions.0.iter().map(|arc| (*arc).clone())
+                        );
                     } else {
                         return self.add_leaf_node((start, end), bounds);
                     }
@@ -185,14 +191,19 @@ impl BVH {
 impl Hittable for BVH {
     fn is_hit(&self, ray: &Ray, t_min: f64, mut t_max: f64) -> Option<Hit> {
         let root = &self.nodes[self.root];
+        let ray_inverse_dir = Vec3::new(
+            1.0 / ray.dir[Coord::X],
+            1.0 / ray.dir[Coord::Y],
+            1.0 / ray.dir[Coord::Z]
+        );
 
         let mut hit = None;
         let mut node_stack = vec![root];
         while let Some(node) = node_stack.pop() {
-            if let Some((node_t_min, node_t_max))
-                = node.bounding_box.ray_intersects(ray, t_min, t_max)
+            if let Some((node_t_min, _))
+                = node.bounding_box.ray_intersects(ray, &ray_inverse_dir, t_min, t_max)
             {
-                if t_max < node_t_min || node_t_max < t_min {
+                if t_max < node_t_min {
                     continue;
                 }
 
@@ -209,14 +220,12 @@ impl Hittable for BVH {
                     None => {
                         // Leaf node
                         if let Some((obj_start, obj_end)) = node.object_indices {
-                            let mut closest_t = t_max;
                             for i in obj_start..obj_end {
-                                if let Some(obj_hit) = self.objects[i].is_hit(ray, t_min, closest_t) {
-                                    closest_t = obj_hit.t;
+                                if let Some(obj_hit) = self.objects[i].is_hit(ray, t_min, t_max) {
+                                    t_max = obj_hit.t;
                                     hit = Some(obj_hit);
                                 }
                             }
-                            t_max = closest_t;
                         }
                     }
                 }
