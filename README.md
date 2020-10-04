@@ -37,9 +37,9 @@ Here's a lower-resolution (320x240) animation to show off reflection and refract
 ![animation](https://user-images.githubusercontent.com/30734384/94495092-dd1cd380-01be-11eb-9ada-fd34f5da4549.gif)
 
 Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render.
-512x512 with 10,000 samples per pixel and a maximum of 50 bounces (without using an acceleration structure) took ~1 hour and 32 minutes (as opposed to just over 4 hours and 15 minutes on only one of those cores):
+512x512 with 10,000 samples per pixel and a maximum of 50 bounces took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
 
-![cornell](https://user-images.githubusercontent.com/30734384/94876378-8238e580-0425-11eb-9607-0edcb477728d.png)
+![cornell](https://user-images.githubusercontent.com/30734384/95023677-5e0b1d80-064c-11eb-9632-f6018e198254.png)
 
 And here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
 This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
