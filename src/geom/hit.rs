@@ -84,7 +84,7 @@ impl AxisAlignedBoundingBox {
         true
     }
 
-    pub fn ray_intersects(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> bool {
+    pub fn ray_intersects(&self, ray: &Ray, mut t_min: f64, mut t_max: f64) -> Option<(f64, f64)> {
         for &coord in [ Coord::X, Coord::Y, Coord::Z ].iter() {
             let dir_inverse = 1.0 / ray.dir[coord];
             let mut t0 = dir_inverse * (self.bbl_corner[coord] - ray.origin[coord]);
@@ -98,11 +98,11 @@ impl AxisAlignedBoundingBox {
             t_max = if t1 < t_max { t1 } else { t_max };
 
             if math::f_leq(t_max, t_min) {
-                return false;
+                return None;
             }
         }
 
-        true
+        Some((t_min, t_max))
     }
 
     pub fn union(boxes: Vec<&Self>) -> AxisAlignedBoundingBox {
@@ -158,7 +158,7 @@ pub trait Bounded {
 
 pub trait Hittable {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit>;
-    fn surface_area(&self) -> f64;
+    fn surface_area(&self) -> f64 { 0.0 }
 }
 
 pub trait BoundedHittable: Bounded + Hittable + Send + Sync + std::fmt::Debug {}
@@ -181,6 +181,7 @@ impl HittableGroup {
 
 impl Hittable for HittableGroup {
     fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+        /*
         let mut hit: Option<Hit> = None;
         let mut closest_t = t_max;
 
@@ -192,6 +193,8 @@ impl Hittable for HittableGroup {
         }
 
         hit
+        */
+        self.accel.is_hit(ray, t_min, t_max)
     }
 
     fn surface_area(&self) -> f64 {

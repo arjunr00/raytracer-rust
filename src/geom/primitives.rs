@@ -12,7 +12,7 @@ use super::hit::{
 
 use crate::math;
 use crate::material::Material;
-use crate::vec::{ Point3, Ray, Vec3 };
+use crate::vec::{ Coord, Point3, Ray, Vec3 };
 
 #[derive(Debug)]
 pub struct Sphere {
@@ -127,9 +127,53 @@ impl Hittable for Plane {
 
 impl Bounded for Plane {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
-        let ftr_corner = &self.center + &self.spanning_vecs.0 + &self.spanning_vecs.1;
-        let bbl_corner = &self.center - &self.spanning_vecs.0 - &self.spanning_vecs.1;
-        AxisAlignedBoundingBox::new(ftr_corner, bbl_corner)
+        let spans = (
+             &self.spanning_vecs.0 + &self.spanning_vecs.1,
+             &self.spanning_vecs.0 - &self.spanning_vecs.1,
+            -&self.spanning_vecs.0 + &self.spanning_vecs.1,
+            -&self.spanning_vecs.0 - &self.spanning_vecs.1
+        );
+
+        let mut ftr_corner = &self.center + Point3::new(
+            math::f_max_all(vec![
+                spans.0[Coord::X], spans.1[Coord::X],
+                spans.2[Coord::X], spans.3[Coord::X]
+            ]),
+            math::f_max_all(vec![
+                spans.0[Coord::Y], spans.1[Coord::Y],
+                spans.2[Coord::Y], spans.3[Coord::Y]
+            ]),
+            math::f_max_all(vec![
+                spans.0[Coord::Z], spans.1[Coord::Z],
+                spans.2[Coord::Z], spans.3[Coord::Z]
+            ]),
+        );
+
+        let mut bbl_corner = &self.center + Point3::new(
+            math::f_min_all(vec![
+                spans.0[Coord::X], spans.1[Coord::X],
+                spans.2[Coord::X], spans.3[Coord::X]
+            ]),
+            math::f_min_all(vec![
+                spans.0[Coord::Y], spans.1[Coord::Y],
+                spans.2[Coord::Y], spans.3[Coord::Y]
+            ]),
+            math::f_min_all(vec![
+                spans.0[Coord::Z], spans.1[Coord::Z],
+                spans.2[Coord::Z], spans.3[Coord::Z]
+            ]),
+        );
+
+        // Add a little padding so ray intersection doesn't devolve
+        for &coord in [ Coord::X, Coord::Y, Coord::Z ].iter() {
+            if math::f_eq(ftr_corner[coord], bbl_corner[coord]) {
+                ftr_corner[coord] += 0.01;
+                bbl_corner[coord] -= 0.01;
+            }
+        }
+
+        let bound = AxisAlignedBoundingBox::new(ftr_corner, bbl_corner);
+        bound
     }
 }
 
