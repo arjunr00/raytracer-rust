@@ -38,10 +38,14 @@ For both of these, 512x512 with 10,000 samples per pixel and a maximum of 50 bou
 
 ![cornell2](examples/cornell2.png)
 
-And here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
+Here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
 This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
 
 ![balls](examples/balls.png)
+
+Here's an icosahedron, just for fun (and to show that triangles work).
+
+![ico](examples/ico.png)
 
 ## How it works
 
