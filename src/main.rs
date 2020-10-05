@@ -14,7 +14,7 @@ use raytracer::{
         World,
         hit::HittableRefs,
         primitives::{ Plane, Sphere, Triangle },
-        objects::{ Prism }
+        objects::{ Icosahedron, Prism }
     },
     vec::{ colors, ColorRGB, Point3, Vec3 },
     math,
@@ -356,58 +356,16 @@ fn render_scene_4() {
     let mat_floor = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
     let mat_dif_soft_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
 
-    let phi = (1.0 + f64::sqrt(5.0)) / 2.0;
-    let center = Point3::new(0.0, -0.2, -1.0);
-    let inv_radius = 1.0 / f64::sqrt(phi + 2.0);
-    let verts = [
-        &center + 0.3 * inv_radius * Point3::new(0.0, -1.0,  phi), // 0
-        &center + 0.3 * inv_radius * Point3::new( phi, 0.0,  1.0), // 1
-        &center + 0.3 * inv_radius * Point3::new( phi, 0.0, -1.0), // 2
-        &center + 0.3 * inv_radius * Point3::new(-phi, 0.0, -1.0), // 3
-        &center + 0.3 * inv_radius * Point3::new(-phi, 0.0,  1.0), // 4
-        &center + 0.3 * inv_radius * Point3::new(-1.0,  phi, 0.0), // 5
-        &center + 0.3 * inv_radius * Point3::new( 1.0,  phi, 0.0), // 6
-        &center + 0.3 * inv_radius * Point3::new( 1.0, -phi, 0.0), // 7
-        &center + 0.3 * inv_radius * Point3::new(-1.0, -phi, 0.0), // 8
-        &center + 0.3 * inv_radius * Point3::new(0.0, -1.0, -phi), // 9
-        &center + 0.3 * inv_radius * Point3::new(0.0,  1.0, -phi), // 10
-        &center + 0.3 * inv_radius * Point3::new(0.0,  1.0,  phi), // 11
-    ];
-
     let ground = Plane::new(
         Point3::new(0.0, -0.5, -1.0),
         (100.0 * Vec3::I, 100.0 * Vec3::K),
         mat_floor.clone()
     );
-    let icosahedron_tris = [
-        Arc::new(Triangle::new((verts[1].clone(), verts[2].clone(), verts[6].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[1].clone(), verts[7].clone(), verts[2].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[3].clone(), verts[4].clone(), verts[5].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[4].clone(), verts[3].clone(), verts[8].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[6].clone(), verts[5].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[5].clone(), verts[6].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[9].clone(), verts[10].clone(), verts[2].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[10].clone(), verts[9].clone(), verts[3].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[7].clone(), verts[8].clone(), verts[9].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[8].clone(), verts[7].clone(), verts[0].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[11].clone(), verts[0].clone(), verts[1].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[0].clone(), verts[11].clone(), verts[4].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[6].clone(), verts[2].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[1].clone(), verts[6].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[3].clone(), verts[5].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[5].clone(), verts[4].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[2].clone(), verts[7].clone(), verts[9].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[7].clone(), verts[1].clone(), verts[0].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[3].clone(), verts[9].clone(), verts[8].clone()), mat_dif_soft_red.clone())),
-        Arc::new(Triangle::new((verts[4].clone(), verts[8].clone(), verts[0].clone()), mat_dif_soft_red.clone()))
-    ];
-
-    let mut objs: HittableRefs = vec![ Arc::new(ground) ];
-    for tri in &icosahedron_tris {
-        objs.push(tri.clone());
-    }
-
-    let world = World::new(objs);
+    let icosahedron = Icosahedron::new(Point3::new(0.0, -0.2, -1.0), 0.3, mat_dif_soft_red.clone());
+    let world = World::new(vec![
+        Arc::new(ground),
+        Arc::new(icosahedron)
+    ]);
 
     let camera =
         Camera::new(Point3::new(1.0, 0.0, 2.0), &Point3::new(0.0, 0.0, -1.0),
@@ -421,7 +379,7 @@ fn render_scene_4() {
     let world_arc = Arc::new(world);
     let camera_arc = Arc::new(camera);
     let config_arc = Arc::new(config);
-    raytracer::write_ppm_threaded(world_arc, camera_arc, "tris.ppm", config_arc);
+    raytracer::write_ppm_threaded(world_arc, camera_arc, "ico.ppm", config_arc);
 
     // Uncomment to watch render live
     // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);

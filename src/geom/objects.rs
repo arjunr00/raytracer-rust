@@ -3,16 +3,15 @@ use std::sync::Arc;
 use super::hit::{
     AxisAlignedBoundingBox,
     Bounded,
+    BoundedHittable,
     Hit,
     Hittable,
-    BoundedHittable,
     HittableGroup,
 };
-use super::primitives::Plane;
+use super::primitives::{ Plane, Triangle };
 
 use crate::material::Material;
-use crate::math;
-use crate::vec::{ Coord, Point3, Ray, Vec3 };
+use crate::vec::{ Point3, Ray, Vec3 };
 
 #[derive(Debug)]
 pub struct Prism {
@@ -70,60 +69,80 @@ impl Hittable for Prism {
 
 impl Bounded for Prism {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
-        let spans = (
-             &self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2,
-             &self.spanning_vecs.0 + &self.spanning_vecs.1 - &self.spanning_vecs.2,
-             &self.spanning_vecs.0 - &self.spanning_vecs.1 + &self.spanning_vecs.2,
-             &self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2,
-            -&self.spanning_vecs.0 + &self.spanning_vecs.1 + &self.spanning_vecs.2,
-            -&self.spanning_vecs.0 + &self.spanning_vecs.1 - &self.spanning_vecs.2,
-            -&self.spanning_vecs.0 - &self.spanning_vecs.1 + &self.spanning_vecs.2,
-            -&self.spanning_vecs.0 - &self.spanning_vecs.1 - &self.spanning_vecs.2
-        );
+        AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
+    }
+}
 
-        let ftr_corner = &self.center + Point3::new(
-            math::f_max_all(vec![
-                spans.0[Coord::X], spans.1[Coord::X],
-                spans.2[Coord::X], spans.3[Coord::X],
-                spans.4[Coord::X], spans.5[Coord::X],
-                spans.6[Coord::X], spans.7[Coord::X]
-            ]),
-            math::f_max_all(vec![
-                spans.0[Coord::Y], spans.1[Coord::Y],
-                spans.2[Coord::Y], spans.3[Coord::Y],
-                spans.4[Coord::Y], spans.5[Coord::Y],
-                spans.6[Coord::Y], spans.7[Coord::Y]
-            ]),
-            math::f_max_all(vec![
-                spans.0[Coord::Z], spans.1[Coord::Z],
-                spans.2[Coord::Z], spans.3[Coord::Z],
-                spans.4[Coord::Z], spans.5[Coord::Z],
-                spans.6[Coord::Z], spans.7[Coord::Z]
-            ]),
-        );
+#[derive(Debug)]
+pub struct Icosahedron {
+    center: Point3,
+    radius: f64,
+    primitives: HittableGroup
+}
 
-        let bbl_corner = &self.center + Point3::new(
-            math::f_min_all(vec![
-                spans.0[Coord::X], spans.1[Coord::X],
-                spans.2[Coord::X], spans.3[Coord::X],
-                spans.4[Coord::X], spans.5[Coord::X],
-                spans.6[Coord::X], spans.7[Coord::X]
-            ]),
-            math::f_min_all(vec![
-                spans.0[Coord::Y], spans.1[Coord::Y],
-                spans.2[Coord::Y], spans.3[Coord::Y],
-                spans.4[Coord::Y], spans.5[Coord::Y],
-                spans.6[Coord::Y], spans.7[Coord::Y]
-            ]),
-            math::f_min_all(vec![
-                spans.0[Coord::Z], spans.1[Coord::Z],
-                spans.2[Coord::Z], spans.3[Coord::Z],
-                spans.4[Coord::Z], spans.5[Coord::Z],
-                spans.6[Coord::Z], spans.7[Coord::Z]
-            ]),
-        );
+impl Icosahedron {
+    pub fn new(center: Point3, radius: f64, material: Arc<dyn Material>) -> Icosahedron {
+        let phi = (1.0 + f64::sqrt(5.0)) / 2.0;
+        let inv_radius = 1.0 / f64::sqrt(phi + 2.0);
 
-        let bound = AxisAlignedBoundingBox::new(ftr_corner, bbl_corner);
-        bound
+        let verts = [
+            &center + radius * inv_radius * Point3::new(0.0, -1.0,  phi), // 0
+            &center + radius * inv_radius * Point3::new( phi, 0.0,  1.0), // 1
+            &center + radius * inv_radius * Point3::new( phi, 0.0, -1.0), // 2
+            &center + radius * inv_radius * Point3::new(-phi, 0.0, -1.0), // 3
+            &center + radius * inv_radius * Point3::new(-phi, 0.0,  1.0), // 4
+            &center + radius * inv_radius * Point3::new(-1.0,  phi, 0.0), // 5
+            &center + radius * inv_radius * Point3::new( 1.0,  phi, 0.0), // 6
+            &center + radius * inv_radius * Point3::new( 1.0, -phi, 0.0), // 7
+            &center + radius * inv_radius * Point3::new(-1.0, -phi, 0.0), // 8
+            &center + radius * inv_radius * Point3::new(0.0, -1.0, -phi), // 9
+            &center + radius * inv_radius * Point3::new(0.0,  1.0, -phi), // 10
+            &center + radius * inv_radius * Point3::new(0.0,  1.0,  phi), // 11
+        ];
+        let icosahedron_tris = HittableGroup::new(vec![
+            Arc::new(Triangle::new((verts[1].clone(), verts[2].clone(), verts[6].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[1].clone(), verts[7].clone(), verts[2].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[3].clone(), verts[4].clone(), verts[5].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[4].clone(), verts[3].clone(), verts[8].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[6].clone(), verts[5].clone(), verts[11].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[5].clone(), verts[6].clone(), verts[10].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[9].clone(), verts[10].clone(), verts[2].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[10].clone(), verts[9].clone(), verts[3].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[7].clone(), verts[8].clone(), verts[9].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[8].clone(), verts[7].clone(), verts[0].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[11].clone(), verts[0].clone(), verts[1].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[0].clone(), verts[11].clone(), verts[4].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[6].clone(), verts[2].clone(), verts[10].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[1].clone(), verts[6].clone(), verts[11].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[3].clone(), verts[5].clone(), verts[10].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[5].clone(), verts[4].clone(), verts[11].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[2].clone(), verts[7].clone(), verts[9].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[7].clone(), verts[1].clone(), verts[0].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[3].clone(), verts[9].clone(), verts[8].clone()), material.clone())),
+            Arc::new(Triangle::new((verts[4].clone(), verts[8].clone(), verts[0].clone()), material.clone()))
+        ]);
+
+        Icosahedron {
+            center, radius,
+            primitives: icosahedron_tris
+        }
+    }
+}
+
+impl BoundedHittable for Icosahedron {}
+
+impl Hittable for Icosahedron {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+        self.primitives.is_hit(ray, t_min, t_max)
+    }
+
+    fn surface_area(&self) -> f64 {
+        self.primitives.hittables().iter().fold(0.0, |acc, tri| acc + tri.surface_area())
+    }
+}
+
+impl Bounded for Icosahedron {
+    fn bounding_box(&self) -> AxisAlignedBoundingBox {
+        AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
     }
 }
