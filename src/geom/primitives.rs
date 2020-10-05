@@ -177,6 +177,87 @@ impl Bounded for Plane {
     }
 }
 
+#[derive(Debug)]
+pub struct Triangle {
+    corners: (Point3, Point3, Point3),
+    material: Arc<dyn Material>
+}
+
+impl Triangle {
+    pub fn new(corners: (Point3, Point3, Point3), material: Arc<dyn Material>) -> Triangle {
+        Triangle { corners, material }
+    }
+}
+
+impl BoundedHittable for Triangle {}
+
+impl Hittable for Triangle {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+        // label corners 0, 1, 2 as A, B, C going counter-clockwise
+        let a = &self.corners.0;
+        let b = &self.corners.1;
+        let c = &self.corners.2;
+
+        let ab = b - a;
+        let ac = c - a;
+        let bc = c - b;
+
+        let normal = ab.cross(&ac).unit();
+
+        if Vec3::orthogonal(&ray.dir, &normal) { return None; }
+
+        let t = ((&self.corners.0 - &ray.origin).dot(&normal)) / (ray.dir.dot(&normal));
+
+        if ab.cross(&(ray.at(t) - a)).dot(&normal) < 0.0
+            || bc.cross(&(ray.at(t) - b)).dot(&normal) < 0.0
+            || (-ac).cross(&(ray.at(t) - c)).dot(&normal) < 0.0
+        {
+            return None;
+        }
+
+        if t < t_max && t > t_min {
+            let outer = ray.dir.dot(&normal) < 0.0;
+            Some(Hit::new(ray.at(t), normal, t, outer, self.material.clone()))
+        } else {
+            None
+        }
+    }
+
+    fn surface_area(&self) -> f64 {
+        let a = &self.corners.0;
+        let b = &self.corners.1;
+        let c = &self.corners.2;
+
+        let ab = b - a;
+        let ac = c - a;
+
+        0.5 * ab.cross(&ac).norm()
+    }
+}
+
+impl Bounded for Triangle {
+    fn bounding_box(&self) -> AxisAlignedBoundingBox {
+        let a = &self.corners.0;
+        let b = &self.corners.1;
+        let c = &self.corners.2;
+
+        let ftr_corner = Point3::new(
+            math::f_max_all(vec![a[Coord::X], b[Coord::X], c[Coord::X]]),
+            math::f_max_all(vec![a[Coord::Y], b[Coord::Y], c[Coord::Y]]),
+            math::f_max_all(vec![a[Coord::Z], b[Coord::Z], c[Coord::Z]])
+        );
+        let bbl_corner = Point3::new(
+            math::f_min_all(vec![a[Coord::X], b[Coord::X], c[Coord::X]]),
+            math::f_min_all(vec![a[Coord::Y], b[Coord::Y], c[Coord::Y]]),
+            math::f_min_all(vec![a[Coord::Z], b[Coord::Z], c[Coord::Z]])
+        );
+
+        AxisAlignedBoundingBox::new(
+            ftr_corner, bbl_corner
+        )
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -234,5 +315,33 @@ mod tests {
         let ray = Ray::new(&Vec3::O, &(Vec3::J + Vec3::I));
         assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
             "Ray shouldn't have hit plane but did.")
+    }
+
+    #[test]
+    fn tri_hit() {
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let tri = Triangle::new(
+            (Point3::new(-0.5, -0.5, -0.5),
+             Point3::new( 0.5, -0.5, -0.5),
+             Point3::new( 0. ,  0.0, -0.5)),
+            Arc::new(mat_dif_white)
+        );
+        let ray = Ray::new(&Vec3::O, &-Vec3::K);
+        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+            "Ray should have hit triangle but didn't.")
+    }
+
+    #[test]
+    fn tri_miss() {
+        let mat_dif_white = DiffuseLambert::new(colors::WHITE);
+        let tri = Triangle::new(
+            (Point3::new(-0.5, -0.5, -0.5),
+             Point3::new( 0.5, -0.5, -0.5),
+             Point3::new( 0. ,  0.0, -0.5)),
+            Arc::new(mat_dif_white)
+        );
+        let ray = Ray::new(&Vec3::O, &(Vec3::J - Vec3::K));
+        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
+            "Ray shouldn't have hit triangle but did.")
     }
 }

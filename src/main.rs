@@ -13,7 +13,7 @@ use raytracer::{
     geom::{
         World,
         hit::HittableRefs,
-        primitives::{ Plane, Sphere },
+        primitives::{ Plane, Sphere, Triangle },
         objects::{ Prism }
     },
     vec::{ colors, ColorRGB, Point3, Vec3 },
@@ -45,15 +45,19 @@ fn main() {
             render_scene_1(render_type);
         },
         2 => {
-            eprintln!("Rendering scene 2:");
+            eprintln!("Rendering scene 2.");
             render_scene_2();
         },
         3 => {
-            eprintln!("Rendering scene 3:");
+            eprintln!("Rendering scene 3.");
             render_scene_3();
         },
+        4 => {
+            eprintln!("Rendering scene 4.");
+            render_scene_4();
+        },
         _ => {
-            eprintln!("No scene selected.");
+            eprintln!("{} is not a valid scene number.", render_opt);
             std::process::exit(1);
         }
     };
@@ -327,6 +331,97 @@ fn render_scene_3() {
     let camera_arc = Arc::new(camera);
     let config_arc = Arc::new(config);
     raytracer::write_ppm_threaded(world_arc, camera_arc, "balls.ppm", config_arc);
+
+    // Uncomment to watch render live
+    // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);
+}
+
+fn render_scene_4() {
+    let out_width = 640;
+    let out_height = 480;
+    let fov_deg = 30.0;
+    let aperture = 0.0;
+    let samples = 100;
+    let max_depth = 50;
+
+    let background = |t| {
+        math::lerp(colors::SKYBLUE, colors::WHITE, t)
+    };
+    let config = raytracer::ImageConfig {
+        width: out_width, height: out_height,
+        samples: samples, max_depth: max_depth,
+        background: Arc::new(background)
+    };
+
+    let mat_floor = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
+    let mat_dif_soft_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
+
+    let phi = (1.0 + f64::sqrt(5.0)) / 2.0;
+    let center = Point3::new(0.0, -0.2, -1.0);
+    let inv_radius = 1.0 / f64::sqrt(phi + 2.0);
+    let verts = [
+        &center + 0.3 * inv_radius * Point3::new(0.0, -1.0,  phi), // 0
+        &center + 0.3 * inv_radius * Point3::new( phi, 0.0,  1.0), // 1
+        &center + 0.3 * inv_radius * Point3::new( phi, 0.0, -1.0), // 2
+        &center + 0.3 * inv_radius * Point3::new(-phi, 0.0, -1.0), // 3
+        &center + 0.3 * inv_radius * Point3::new(-phi, 0.0,  1.0), // 4
+        &center + 0.3 * inv_radius * Point3::new(-1.0,  phi, 0.0), // 5
+        &center + 0.3 * inv_radius * Point3::new( 1.0,  phi, 0.0), // 6
+        &center + 0.3 * inv_radius * Point3::new( 1.0, -phi, 0.0), // 7
+        &center + 0.3 * inv_radius * Point3::new(-1.0, -phi, 0.0), // 8
+        &center + 0.3 * inv_radius * Point3::new(0.0, -1.0, -phi), // 9
+        &center + 0.3 * inv_radius * Point3::new(0.0,  1.0, -phi), // 10
+        &center + 0.3 * inv_radius * Point3::new(0.0,  1.0,  phi), // 11
+    ];
+
+    let ground = Plane::new(
+        Point3::new(0.0, -0.5, -1.0),
+        (100.0 * Vec3::I, 100.0 * Vec3::K),
+        mat_floor.clone()
+    );
+    let icosahedron_tris = [
+        Arc::new(Triangle::new((verts[1].clone(), verts[2].clone(), verts[6].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[1].clone(), verts[7].clone(), verts[2].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[3].clone(), verts[4].clone(), verts[5].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[4].clone(), verts[3].clone(), verts[8].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[6].clone(), verts[5].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[5].clone(), verts[6].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[9].clone(), verts[10].clone(), verts[2].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[10].clone(), verts[9].clone(), verts[3].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[7].clone(), verts[8].clone(), verts[9].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[8].clone(), verts[7].clone(), verts[0].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[11].clone(), verts[0].clone(), verts[1].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[0].clone(), verts[11].clone(), verts[4].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[6].clone(), verts[2].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[1].clone(), verts[6].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[3].clone(), verts[5].clone(), verts[10].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[5].clone(), verts[4].clone(), verts[11].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[2].clone(), verts[7].clone(), verts[9].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[7].clone(), verts[1].clone(), verts[0].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[3].clone(), verts[9].clone(), verts[8].clone()), mat_dif_soft_red.clone())),
+        Arc::new(Triangle::new((verts[4].clone(), verts[8].clone(), verts[0].clone()), mat_dif_soft_red.clone()))
+    ];
+
+    let mut objs: HittableRefs = vec![ Arc::new(ground) ];
+    for tri in &icosahedron_tris {
+        objs.push(tri.clone());
+    }
+
+    let world = World::new(objs);
+
+    let camera =
+        Camera::new(Point3::new(1.0, 0.0, 2.0), &Point3::new(0.0, 0.0, -1.0),
+            fov_deg, aperture, out_width, out_height);
+
+    // Single-threaded
+    // let mut file = File::create(&Path::new("temp.ppm")).unwrap();
+    // file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+
+    // Multi-threaded
+    let world_arc = Arc::new(world);
+    let camera_arc = Arc::new(camera);
+    let config_arc = Arc::new(config);
+    raytracer::write_ppm_threaded(world_arc, camera_arc, "tris.ppm", config_arc);
 
     // Uncomment to watch render live
     // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);
