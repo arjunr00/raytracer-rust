@@ -111,13 +111,15 @@ pub fn write_ppm_threaded(world: Arc<World>, camera: Arc<Camera>, filename: &str
             let rng = rand::thread_rng();
             let mut rand = Rand { dist: zero_to_one, rng };
 
+            let stratum = (f64::from(s) / f64::from(samples)) * (1.0 + rand_f64(&mut rand));
+
             let mut ppm = format!("P3\n{} {}\n{}\n", width, height, MAX_COLORS);
             for i in 0..height {
                 let mut scanline = vec![colors::BLACK; width as usize];
 
                 for j in 0..width {
-                    let u = ((j as f64) + rand_f64(&mut rand)) / f64::from(width - 1);
-                    let v = ((i as f64) + rand_f64(&mut rand)) / f64::from(height - 1);
+                    let u = ((j as f64) + stratum) / f64::from(width - 1);
+                    let v = ((i as f64) + stratum) / f64::from(height - 1);
 
                     let r = camera.ray(u, v, &mut rand);
 
