@@ -182,6 +182,8 @@ fn render_scene_2() {
             fov_deg, aperture, out_width, out_height);
 
     let mat_dif_white = Arc::new(material::DiffuseLambert::new(ColorRGB::new(1.0, 1.0, 1.0)));
+    let mat_mirror = Arc::new(material::Reflective::new(ColorRGB::new(1.0, 1.0, 1.0), 0.0));
+    let mat_glass_white = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
     let mat_dif_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.57, 0.025, 0.025)));
     let mat_dif_green = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.025, 0.236, 0.025)));
     let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 0.67, 0.21), 16.3));
@@ -227,6 +229,16 @@ fn render_scene_2() {
         Point3::new(368.0, 165.0, 351.0),
         (Point3::new(79.0, 0.0, -24.5), Point3::new(0.0, 165.0, 0.0), Point3::new(24.5, 0.0, 79.0)),
         mat_dif_white.clone()
+    );
+    let small_glass_sphere = Sphere::new(
+        Point3::new(185.0, 82.5, 168.5),
+        82.5,
+        mat_glass_white.clone()
+    );
+    let tall_mirror_block = Prism::new(
+        Point3::new(368.0, 165.0, 351.0),
+        (Point3::new(79.0, 0.0, -24.5), Point3::new(0.0, 165.0, 0.0), Point3::new(24.5, 0.0, 79.0)),
+        mat_mirror.clone()
     );
 
     let world = World::new(vec![

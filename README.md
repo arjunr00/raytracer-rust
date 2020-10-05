@@ -31,10 +31,12 @@ Below is an animation of a camera pivoting around a transparent ball with refrac
 
 ![raytracer](examples/temp.gif)
 
-Here's a [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) render.
-512x512 with 10,000 samples per pixel and a maximum of 50 bounces took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
+Here's a couple of [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) renders.
+For both of these, 512x512 with 10,000 samples per pixel and a maximum of 50 bounces took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
 
 ![cornell](examples/cornell.png)
+
+![cornell2](examples/cornell2.png)
 
 And here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
 This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
