@@ -28,7 +28,7 @@ Run `cargo test` to run some basic sanity unit tests.
 The following images were produced (unless otherwise specified) using all 8 cores of my laptop's i7-8550U and a [bounding volume hierarchy](https://www.wikipedia.org/en/Bounding_volume_hierarchy) as an acceleration structure.
 
 Below is an animation of a camera pivoting around a transparent ball with refractive index of 1.52, diffuse ball, reflective ball with roughness of 0.3, and diffuse plane.
-120 frames of 640x480 images with 100 samples per pixel and a maximum of 50 bounces per ray took about 24 minutes:
+120 frames of 640x480 images with 100 samples per pixel and a maximum of 50 bounces per ray took about 24 minutes (so ~12 seconds per frame):
 
 ![raytracer](examples/temp.gif)
 
