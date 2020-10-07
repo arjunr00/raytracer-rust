@@ -12,9 +12,9 @@ use raytracer::{
     camera::Camera,
     geom::{
         World,
-        hit::HittableRefs,
+        hit::{ Bounded, HittableRefs },
         primitives::{ Plane, Sphere, Triangle },
-        objects::{ Icosahedron, Prism }
+        objects::{ Icosahedron, Prism, Object }
     },
     vec::{ colors, ColorRGB, Point3, Vec3 },
     math,
@@ -339,7 +339,7 @@ fn render_scene_3() {
 fn render_scene_4() {
     let out_width = 640;
     let out_height = 480;
-    let fov_deg = 30.0;
+    let fov_deg = 60.0;
     let aperture = 0.0;
     let samples = 100;
     let max_depth = 50;
@@ -354,22 +354,30 @@ fn render_scene_4() {
     };
 
     let mat_floor = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
-    let mat_dif_soft_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
+    let mat_dif = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
+    let mat_reflect = Arc::new(material::Reflective::new(ColorRGB::new(0.831, 0.686, 0.215), 0.35));
+    let mat_glass = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
 
     let ground = Plane::new(
-        Point3::new(0.0, -0.5, -1.0),
-        (100.0 * Vec3::I, 100.0 * Vec3::K),
+        Point3::new(0.0, -0.5, 0.0),
+        (1000.0 * Vec3::I, 1000.0 * Vec3::K),
         mat_floor.clone()
     );
-    let icosahedron = Icosahedron::new(Point3::new(0.0, -0.2, -1.0), 0.3, mat_dif_soft_red.clone());
+
+    let size = 0.1;
+    let object = Object::new(
+        Point3::new(0.0, 7.0, 0.0), size, &Path::new("models/armadillo.obj"), mat_reflect.clone()
+    );
+
+    let camera_focus = object.bounding_box().center().clone();
+    let camera =
+        Camera::new(&camera_focus + Point3::new(10.0, 3.0, -20.0), &camera_focus,
+            fov_deg, aperture, out_width, out_height);
+
     let world = World::new(vec![
         Arc::new(ground),
-        Arc::new(icosahedron)
+        Arc::new(object)
     ]);
-
-    let camera =
-        Camera::new(Point3::new(1.0, 0.0, 2.0), &Point3::new(0.0, 0.0, -1.0),
-            fov_deg, aperture, out_width, out_height);
 
     // Single-threaded
     // let mut file = File::create(&Path::new("temp.ppm")).unwrap();
@@ -379,7 +387,7 @@ fn render_scene_4() {
     let world_arc = Arc::new(world);
     let camera_arc = Arc::new(camera);
     let config_arc = Arc::new(config);
-    raytracer::write_ppm_threaded(world_arc, camera_arc, "ico.ppm", config_arc);
+    raytracer::write_ppm_threaded(world_arc, camera_arc, "armadillo.ppm", config_arc);
 
     // Uncomment to watch render live
     // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);

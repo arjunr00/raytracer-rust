@@ -12,6 +12,7 @@ In `src/main.rs` there are currently two available scenes you can render:
 1. A basic scene with a diffuse sphere, a reflective sphere, a glass sphere, and a diffuse plane.
 2. A [Cornell box](https://www.graphics.cornell.edu/online/box/data.html).
 3. A thousand randomly generated spheres.
+4. A [Stanford armadillo](http://graphics.stanford.edu/data/3Dscanrep/).
 
 Just run `cargo run --release [1|2|3]` to render one of these.
 (You can add `animate` at the end if you're rendering Scene 1 in particular to output a series of frames of an animated camera pivoting about the center of the scene to a subdirectory named `frames/`).
@@ -43,9 +44,10 @@ This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed 
 
 ![balls](examples/balls.png)
 
-Here's an icosahedron, just for fun (and to show that triangles work).
+Here's a golden [Stanford armadillo](http://graphics.stanford.edu/data/3Dscanrep/) (model obtained courtesy of [here](https://github.com/alecjacobson/common-3d-test-models)), loaded from the .obj inside the `models/` directory.
+This model, which has 99,976 triangles, took about 19 seconds to render at 640x480, 100 samples:
 
-![ico](examples/ico.png)
+![armadillo](examples/armadillo.png)
 
 ## How it works
 
