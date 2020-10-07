@@ -13,6 +13,7 @@ use vec::ColorRGB;
 pub mod accel;
 pub mod camera;
 pub mod geom;
+pub mod loader;
 pub mod material;
 pub mod math;
 pub mod threadpool;

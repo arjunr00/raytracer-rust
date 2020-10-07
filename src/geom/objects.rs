@@ -1,3 +1,5 @@
+use std::ffi::OsStr;
+use std::path::Path;
 use std::sync::Arc;
 
 use super::hit::{
@@ -6,10 +8,12 @@ use super::hit::{
     BoundedHittable,
     Hit,
     Hittable,
+    HittableRefs,
     HittableGroup,
 };
 use super::primitives::{ Plane, Triangle };
 
+use crate::loader::{ Loader, Polygon };
 use crate::material::Material;
 use crate::vec::{ Point3, Ray, Vec3 };
 
@@ -142,6 +146,77 @@ impl Hittable for Icosahedron {
 }
 
 impl Bounded for Icosahedron {
+    fn bounding_box(&self) -> AxisAlignedBoundingBox {
+        AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
+    }
+}
+
+#[derive(Debug)]
+pub struct Object {
+    center: Point3,
+    primitives: HittableGroup
+}
+
+impl Object {
+    pub fn new(center: Point3, scale: f64, filepath: &Path, material: Arc<dyn Material>) -> Object {
+        match filepath.extension().and_then(OsStr::to_str) {
+            Some("obj") => {
+                let obj = Loader::load_obj(filepath).unwrap();
+                let mut tris: Vec<Triangle> = vec![];
+                let mut primitives: HittableRefs = vec![];
+                for face in obj.indices {
+                    match face.0 {
+                        Polygon::Tri => {
+                            let a = &center + scale * (obj.vertices[face.1[0]].clone());
+                            let b = &center + scale * (obj.vertices[face.1[1]].clone());
+                            let c = &center + scale * (obj.vertices[face.1[2]].clone());
+                            tris.push(Triangle::new(
+                                (a.clone(), b.clone(), c.clone()), material.clone()
+                            ));
+                            primitives.push(Arc::new(Triangle::new(
+                                (a, b, c), material.clone()
+                            )));
+                        }
+                    }
+                }
+
+                let mut adjusted_primitives: HittableRefs = vec![];
+                let translation = AxisAlignedBoundingBox::union_from_objs(&primitives).center() - &center;
+                for tri in &tris {
+                    let new_a = tri.a() - &translation;
+                    let new_b = tri.b() - &translation;
+                    let new_c = tri.c() - &translation;
+
+                    adjusted_primitives.push(Arc::new(Triangle::new(
+                        (new_a, new_b, new_c), material.clone()
+                    )));
+                }
+
+                Object {
+                    center,
+                    primitives: HittableGroup::new(adjusted_primitives)
+                }
+            },
+            Some(_) | None => todo!()
+        }
+    }
+
+
+}
+
+impl BoundedHittable for Object {}
+
+impl Hittable for Object {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+        self.primitives.is_hit(ray, t_min, t_max)
+    }
+
+    fn surface_area(&self) -> f64 {
+        self.primitives.hittables().iter().fold(0.0, |acc, tri| acc + tri.surface_area())
+    }
+}
+
+impl Bounded for Object {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
     }

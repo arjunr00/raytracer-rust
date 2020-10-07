@@ -187,6 +187,18 @@ impl Triangle {
     pub fn new(corners: (Point3, Point3, Point3), material: Arc<dyn Material>) -> Triangle {
         Triangle { corners, material }
     }
+
+    pub fn a(&self) -> &Point3 {
+        &self.corners.0
+    }
+
+    pub fn b(&self) -> &Point3 {
+        &self.corners.1
+    }
+
+    pub fn c(&self) -> &Point3 {
+        &self.corners.2
+    }
 }
 
 impl BoundedHittable for Triangle {}
