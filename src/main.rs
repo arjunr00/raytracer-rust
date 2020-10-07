@@ -187,9 +187,11 @@ fn render_scene_2() {
 
     let mat_dif_white = Arc::new(material::DiffuseLambert::new(ColorRGB::new(1.0, 1.0, 1.0)));
     let mat_mirror = Arc::new(material::Reflective::new(ColorRGB::new(1.0, 1.0, 1.0), 0.0));
+    let mat_metal_blue = Arc::new(material::Reflective::new(ColorRGB::new(0.3, 0.7, 0.8), 0.4));
     let mat_glass_white = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
     let mat_dif_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.57, 0.025, 0.025)));
     let mat_dif_green = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.025, 0.236, 0.025)));
+    let mat_dif_lavender = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.776, 0.564, 0.976)));
     let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 0.67, 0.21), 16.3));
 
     let floor = Plane::new(
@@ -243,6 +245,19 @@ fn render_scene_2() {
         Point3::new(368.0, 165.0, 351.0),
         (Point3::new(79.0, 0.0, -24.5), Point3::new(0.0, 165.0, 0.0), Point3::new(24.5, 0.0, 79.0)),
         mat_mirror.clone()
+    );
+
+    let lucy = Object::new(
+        Point3::new(368.0, 210.0, 351.0),
+        0.27,
+        vec![(90_f64.to_radians(), -Vec3::I), (15_f64.to_radians(), Vec3::J)],
+        &Path::new("models/lucy.obj"), mat_metal_blue.clone()
+    );
+    let bunny = Object::new(
+        Point3::new(185.0, 84.5, 168.5),
+        1100.0,
+        vec![(180_f64.to_radians(), Vec3::J)],
+        &Path::new("models/bunny.obj"), mat_dif_lavender.clone()
     );
 
     let world = World::new(vec![
@@ -366,7 +381,9 @@ fn render_scene_4() {
 
     let size = 0.1;
     let object = Object::new(
-        Point3::new(0.0, 7.0, 0.0), size, &Path::new("models/armadillo.obj"), mat_reflect.clone()
+        Point3::new(0.0, 7.0, 0.0),
+        size, vec![],
+        &Path::new("models/armadillo.obj"), mat_reflect.clone()
     );
 
     let camera_focus = object.bounding_box().center().clone();
