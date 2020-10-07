@@ -57,3 +57,7 @@ TODO
 
 * [Ray Tracing in One Weekend](https://raytracing.github.io/books/RayTracingInOneWeekend.html)
 * [Physically Based Rendering: From Theory to Implementation](https://pbrt.org/)
+* [Cornell Box Data](https://www.graphics.cornell.edu/online/box/data.html)
+* [Common 3D Test Models](https://github.com/alecjacobson/common-3d-test-models)
+* [Wavefront .obj file](https://www.wikiwand.com/en/Wavefront_.obj_file)
+* High school and college physics classes
