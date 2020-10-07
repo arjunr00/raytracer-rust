@@ -32,7 +32,17 @@ Below is an animation of a camera pivoting around a transparent ball with refrac
 
 ![raytracer](examples/temp.gif)
 
-Here's a few [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) renders, all of which are 512x512 pixels with 10,000 samples per pixels and a maximum of 50 bounces.
+Here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
+This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
+
+![balls](examples/balls.png)
+
+Here's a golden [Stanford armadillo](http://graphics.stanford.edu/data/3Dscanrep/) (model obtained courtesy of [here](https://github.com/alecjacobson/common-3d-test-models)), loaded from the .obj inside the `models/` directory.
+This model, which has 99,976 triangles, took about 19 seconds to render at 640x480, 100 samples:
+
+![armadillo](examples/armadillo.png)
+
+And here's a few [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) renders, all of which are 512x512 pixels with 10,000 samples per pixels and a maximum of 50 bounces.
 The first two took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
 
 ![cornell](examples/cornell.png)
@@ -43,16 +53,6 @@ This one, with [Lucy and the Stanford bunny](http://graphics.stanford.edu/data/3
 However, to be fair, I was running multiple Chrome tabs as well as attending class over Zoom while rendering this, unlike the other images, so it probably would have been faster if left alone:
 
 ![cornell3](examples/cornell3.png)
-
-Here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
-This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
-
-![balls](examples/balls.png)
-
-Here's a golden [Stanford armadillo](http://graphics.stanford.edu/data/3Dscanrep/) (model obtained courtesy of [here](https://github.com/alecjacobson/common-3d-test-models)), loaded from the .obj inside the `models/` directory.
-This model, which has 99,976 triangles, took about 19 seconds to render at 640x480, 100 samples:
-
-![armadillo](examples/armadillo.png)
 
 ## How it works
 
