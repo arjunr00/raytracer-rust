@@ -158,7 +158,10 @@ pub struct Object {
 }
 
 impl Object {
-    pub fn new(center: Point3, scale: f64, filepath: &Path, material: Arc<dyn Material>) -> Object {
+    pub fn new(center: Point3, scale: f64, rotations: Vec<(f64, Vec3)>,
+        filepath: &Path, material: Arc<dyn Material>)
+        -> Object
+    {
         match filepath.extension().and_then(OsStr::to_str) {
             Some("obj") => {
                 let obj = Loader::load_obj(filepath).unwrap();
@@ -170,6 +173,7 @@ impl Object {
                             let a = &center + scale * (obj.vertices[face.1[0]].clone());
                             let b = &center + scale * (obj.vertices[face.1[1]].clone());
                             let c = &center + scale * (obj.vertices[face.1[2]].clone());
+
                             tris.push(Triangle::new(
                                 (a.clone(), b.clone(), c.clone()), material.clone()
                             ));
@@ -181,11 +185,21 @@ impl Object {
                 }
 
                 let mut adjusted_primitives: HittableRefs = vec![];
-                let translation = AxisAlignedBoundingBox::union_from_objs(&primitives).center() - &center;
+                let bound_center = Vec3::O + AxisAlignedBoundingBox::union_from_objs(&primitives).center();
                 for tri in &tris {
-                    let new_a = tri.a() - &translation;
-                    let new_b = tri.b() - &translation;
-                    let new_c = tri.c() - &translation;
+                    let mut new_a = tri.a() - &bound_center;
+                    let mut new_b = tri.b() - &bound_center;
+                    let mut new_c = tri.c() - &bound_center;
+
+                    for rotation in &rotations {
+                         new_a = new_a.rotate(rotation.0, &rotation.1);
+                         new_b = new_b.rotate(rotation.0, &rotation.1);
+                         new_c = new_c.rotate(rotation.0, &rotation.1);
+                    }
+
+                    new_a += &center;
+                    new_b += &center;
+                    new_c += &center;
 
                     adjusted_primitives.push(Arc::new(Triangle::new(
                         (new_a, new_b, new_c), material.clone()

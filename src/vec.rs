@@ -1,5 +1,5 @@
 use rand::distributions::Distribution;
-use std::{ ops::{self}, clone, cmp, fmt };
+use std::{ ops::{self}, clone, cmp, convert, fmt };
 
 use super::math;
 use super::geom::{
@@ -13,6 +13,9 @@ pub struct Vec3 (f64, f64, f64);
 // Useful aliases
 pub use Vec3 as ColorRGB;
 pub use Vec3 as Point3;
+
+#[derive(Debug)]
+pub struct Quaternion(f64, Vec3);
 
 /// Describes a ray of the form r(t) = origin + t*dir
 #[derive(Debug)]
@@ -169,17 +172,49 @@ impl Vec3 {
         let y = 2.0 * rand.dist.sample(&mut rand.rng) - 1.0;
         Vec3::new(x, y, 0.0).unit()
     }
+
+    pub fn rotate(&self, angle: f64, axis: &Vec3) -> Vec3 {
+        if math::f_eq(0.0, angle) { return self.clone(); }
+
+        let rot = Quaternion((angle * 0.5).cos(), (angle * 0.5).sin() * axis.unit());
+        let new_vec = &rot * Quaternion::from(self.clone()) * &rot.conj();
+        new_vec.1
+    }
 }
 
-impl fmt::Display for Vec3 {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        write!(f, "\u{27E8}{:.2}, {:.2}, {:.2}\u{27E9}", self[Coord::X], self[Coord::Y], self[Coord::Z])
+impl Quaternion {
+    pub fn new(angle: f64, axis: &Vec3) -> Quaternion {
+        Quaternion(angle, axis.clone())
+    }
+
+    pub fn angle(&self) -> f64 {
+        self.0
+    }
+
+    pub fn axis(&self) -> &Vec3 {
+        &self.1
+    }
+
+    pub fn conj(&self) -> Quaternion {
+        Quaternion(self.0, -&self.1)
+    }
+}
+
+impl convert::From<Vec3> for Quaternion {
+    fn from(vec: Vec3) -> Quaternion {
+        Quaternion(0.0, vec)
     }
 }
 
 impl clone::Clone for Ray {
     fn clone(&self) -> Ray {
         Ray { origin: self.origin.clone(), dir: self.dir.clone() }
+    }
+}
+
+impl fmt::Display for Vec3 {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\u{27E8}{:.2}, {:.2}, {:.2}\u{27E9}", self[Coord::X], self[Coord::Y], self[Coord::Z])
     }
 }
 
@@ -419,6 +454,85 @@ impl ops::IndexMut<Coord> for Vec3 {
             Coord::Y => &mut self.1,
             Coord::Z => &mut self.2
         }
+    }
+}
+
+impl fmt::Display for Quaternion {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        write!(f, "\u{27E8}{:.2}, {:.2}, {:.2}, {:.2}\u{27E9}",
+            self.0, self.1[Coord::X], self.1[Coord::Y], self.1[Coord::Z])
+    }
+}
+
+impl ops::Mul<Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, other: Quaternion) -> Quaternion {
+        let a = (self.0, other.0);
+        let b = ((self.1).0, (other.1).0);
+        let c = ((self.1).1, (other.1).1);
+        let d = ((self.1).2, (other.1).2);
+
+        let w = a.0 * a.1 - b.0 * b.1 - c.0 * c.1 - d.0 * d.1;
+        let i = a.0 * b.1 + b.0 * a.1 + c.0 * d.1 - d.0 * c.1;
+        let j = a.0 * c.1 - b.0 * d.1 + c.0 * a.1 + d.0 * b.1;
+        let k = a.0 * d.1 + b.0 * c.1 - c.0 * b.1 + d.0 * a.1;
+
+        Quaternion(w, Vec3::new(i, j, k))
+    }
+}
+
+impl ops::Mul<&Quaternion> for Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, other: &Quaternion) -> Quaternion {
+        let a = (self.0, other.0);
+        let b = ((self.1).0, (other.1).0);
+        let c = ((self.1).1, (other.1).1);
+        let d = ((self.1).2, (other.1).2);
+
+        let w = a.0 * a.1 - b.0 * b.1 - c.0 * c.1 - d.0 * d.1;
+        let i = a.0 * b.1 + b.0 * a.1 + c.0 * d.1 - d.0 * c.1;
+        let j = a.0 * c.1 - b.0 * d.1 + c.0 * a.1 + d.0 * b.1;
+        let k = a.0 * d.1 + b.0 * c.1 - c.0 * b.1 + d.0 * a.1;
+
+        Quaternion(w, Vec3::new(i, j, k))
+    }
+}
+
+impl ops::Mul<Quaternion> for &Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, other: Quaternion) -> Quaternion {
+        let a = (self.0, other.0);
+        let b = ((self.1).0, (other.1).0);
+        let c = ((self.1).1, (other.1).1);
+        let d = ((self.1).2, (other.1).2);
+
+        let w = a.0 * a.1 - b.0 * b.1 - c.0 * c.1 - d.0 * d.1;
+        let i = a.0 * b.1 + b.0 * a.1 + c.0 * d.1 - d.0 * c.1;
+        let j = a.0 * c.1 - b.0 * d.1 + c.0 * a.1 + d.0 * b.1;
+        let k = a.0 * d.1 + b.0 * c.1 - c.0 * b.1 + d.0 * a.1;
+
+        Quaternion(w, Vec3::new(i, j, k))
+    }
+}
+
+impl ops::Mul<&Quaternion> for &Quaternion {
+    type Output = Quaternion;
+
+    fn mul(self, other: &Quaternion) -> Quaternion {
+        let a = (self.0, other.0);
+        let b = ((self.1).0, (other.1).0);
+        let c = ((self.1).1, (other.1).1);
+        let d = ((self.1).2, (other.1).2);
+
+        let w = a.0 * a.1 - b.0 * b.1 - c.0 * c.1 - d.0 * d.1;
+        let i = a.0 * b.1 + b.0 * a.1 + c.0 * d.1 - d.0 * c.1;
+        let j = a.0 * c.1 - b.0 * d.1 + c.0 * a.1 + d.0 * b.1;
+        let k = a.0 * d.1 + b.0 * c.1 - c.0 * b.1 + d.0 * a.1;
+
+        Quaternion(w, Vec3::new(i, j, k))
     }
 }
 
