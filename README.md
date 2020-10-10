@@ -13,8 +13,9 @@ In `src/main.rs` there are currently two available scenes you can render:
 2. A [Cornell box](https://www.graphics.cornell.edu/online/box/data.html).
 3. A thousand randomly generated spheres.
 4. A [Stanford armadillo](http://graphics.stanford.edu/data/3Dscanrep/).
+5. [Max Planck's head](https://github.com/alecjacobson/common-3d-test-models).
 
-Just run `cargo run --release [1|2|3]` to render one of these.
+Just run `cargo run --release [1|2|3|4|5]` to render one of these.
 (You can add `animate` at the end if you're rendering Scene 1 in particular to output a series of frames of an animated camera pivoting about the center of the scene to a subdirectory named `frames/`).
 
 By default, this code will run on all available cores of your CPU.
@@ -32,7 +33,7 @@ Below is an animation of a camera pivoting around a transparent ball with refrac
 
 ![raytracer](examples/temp.gif)
 
-Here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance.
+Here's an image of 1,000 spheres, to show off how using an acceleration structure can dramatically improve performance (and a nifty depth-of-field blur).
 This took about 24 seconds to render at 640x480 pixels, 100 samples, as opposed to about 3.65 minutes with a basic linear search:
 
 ![balls](examples/balls.png)
