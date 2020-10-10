@@ -14,7 +14,7 @@ use raytracer::{
         World,
         hit::{ Bounded, HittableRefs },
         primitives::{ Plane, Sphere, Triangle },
-        objects::{ Icosahedron, Prism, Object }
+        objects::{ Icosahedron, Prism, Object, Volume }
     },
     vec::{ colors, ColorRGB, Point3, Vec3 },
     math,
@@ -84,7 +84,8 @@ fn render_scene_1(render_type: RenderType) {
     let mat_dif_soft_blue = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
     let mat_dif_soft_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
     let mat_dif_soft_gray = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.8, 0.8)));
-    let mat_glass_white = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
+    let mat_glass_white = Arc::new(material::Translucent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52, 0.0));
+    let mat_air = Arc::new(material::Translucent::new(ColorRGB::new(1.0, 1.0, 1.0), 0.0, 0.0));
     let mat_metal_rough_soft_green = Arc::new(material::Reflective::new(ColorRGB::new(0.6, 0.8, 0.3), 0.3));
 
     let ground = Plane::new(
@@ -188,7 +189,7 @@ fn render_scene_2() {
     let mat_dif_white = Arc::new(material::DiffuseLambert::new(ColorRGB::new(1.0, 1.0, 1.0)));
     let mat_mirror = Arc::new(material::Reflective::new(ColorRGB::new(1.0, 1.0, 1.0), 0.0));
     let mat_metal_blue = Arc::new(material::Reflective::new(ColorRGB::new(0.3, 0.7, 0.8), 0.4));
-    let mat_glass_white = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
+    let mat_glass_white = Arc::new(material::Translucent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52, 0.0));
     let mat_dif_red = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.57, 0.025, 0.025)));
     let mat_dif_green = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.025, 0.236, 0.025)));
     let mat_dif_lavender = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.776, 0.564, 0.976)));
@@ -259,6 +260,13 @@ fn render_scene_2() {
         vec![(180_f64.to_radians(), Vec3::J)],
         &Path::new("models/bunny.obj"), mat_dif_lavender.clone()
     );
+
+    let cube = Prism::new(
+        Point3::new(278.0, 274.4, 279.6),
+        (Point3::new(-278.0, 0.0, 0.0), Point3::new(0.0, 274.2, 0.0), Point3::new(0.0, 0.0, 279.6)),
+        mat_dif_white.clone()
+    );
+    let volume = Volume::new(Arc::new(cube), 0.0005, mat_dif_white.clone());
 
     let world = World::new(vec![
         Arc::new(floor),
@@ -371,12 +379,23 @@ fn render_scene_4() {
     let mat_floor = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
     let mat_dif = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.8, 0.3, 0.4)));
     let mat_reflect = Arc::new(material::Reflective::new(ColorRGB::new(0.831, 0.686, 0.215), 0.35));
-    let mat_glass = Arc::new(material::Transparent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52));
+    let mat_glass = Arc::new(material::Translucent::new(ColorRGB::new(1.0, 1.0, 1.0), 1.52, 0.0));
+    let mat_air = Arc::new(material::Translucent::new(ColorRGB::new(1.0, 1.0, 1.0), 0.0, 0.0));
+
+    let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 1.0, 1.0), 7.0));
+
+    let mat_skin = Arc::new(material::Translucent::new(ColorRGB::new(0.945, 0.760, 0.490), 0.0, 0.5));
+    let mat_volume = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.772, 0.301, 0.301)));
 
     let ground = Plane::new(
         Point3::new(0.0, -0.5, 0.0),
         (1000.0 * Vec3::I, 1000.0 * Vec3::K),
         mat_floor.clone()
+    );
+    let light = Plane::new(
+        Point3::new(0.0, 14.0, 7.0),
+        (2.3 * Vec3::I, 2.3 * (Vec3::J - Vec3::K)),
+        mat_light.clone()
     );
 
     let size = 0.1;
@@ -390,6 +409,8 @@ fn render_scene_4() {
     let camera =
         Camera::new(&camera_focus + Point3::new(10.0, 3.0, -20.0), &camera_focus,
             fov_deg, aperture, out_width, out_height);
+
+    let volume = Arc::new(Volume::new(object.clone(), 0.4, mat_volume.clone()));
 
     let world = World::new(vec![
         Arc::new(ground),
