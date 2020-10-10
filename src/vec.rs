@@ -4,7 +4,7 @@ use std::{ ops::{self}, clone, cmp, convert, fmt };
 use super::math;
 use super::geom::{
     World,
-    hit::Hittable,
+    hit::{ Hit, Hittable }
 };
 
 /// A struct for a 3-dimensional floating-point vector
@@ -55,7 +55,7 @@ impl Ray {
         let mut ray: Ray = self.clone();
 
         for _ in 0..depth {
-            match world.is_hit(&ray, 0.001, f64::INFINITY) {
+            match world.is_hit(&ray, Hit::FP_OFFSET, f64::INFINITY, rand) {
                 None => {
                     let t = 0.5 * (1.0 - ray.dir[Coord::Y]);
                     color *= bg(t);

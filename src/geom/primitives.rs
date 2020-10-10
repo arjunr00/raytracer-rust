@@ -30,7 +30,7 @@ impl Sphere {
 impl BoundedHittable for Sphere {}
 
 impl Hittable for Sphere {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, _: &mut math::Rand) -> Option<Hit> {
         let vec_to_center = &ray.origin - &self.center;
         let center_dot_self = ray.dir.dot(&vec_to_center);
         let discriminant =
@@ -99,7 +99,7 @@ impl Plane {
 impl BoundedHittable for Plane {}
 
 impl Hittable for Plane {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, _: &mut math::Rand) -> Option<Hit> {
         let plane_i = &self.spanning_vecs.0;
         let plane_j = &self.spanning_vecs.1;
         let normal = (plane_i.cross(plane_j)).unit();
@@ -204,7 +204,7 @@ impl Triangle {
 impl BoundedHittable for Triangle {}
 
 impl Hittable for Triangle {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, _: &mut math::Rand) -> Option<Hit> {
         // label corners 0, 1, 2 as A, B, C going counter-clockwise
         let a = &self.corners.0;
         let b = &self.corners.1;
@@ -272,16 +272,22 @@ impl Bounded for Triangle {
 
 #[cfg(test)]
 mod tests {
+    use crate::math::Rand;
+    use crate::material::DiffuseLambert;
+    use crate::vec::colors;
+
     use super::*;
-    use super::super::super::material::DiffuseLambert;
-    use super::super::super::vec::colors;
 
     #[test]
     fn sphere_hit() {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
-        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_some(),
             "Ray should have hit sphere but didn't.")
     }
 
@@ -290,7 +296,11 @@ mod tests {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -1.0), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &Vec3::J);
-        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_none(),
             "Ray shouldn't have hit sphere but did.")
     }
 
@@ -299,7 +309,11 @@ mod tests {
         let mat_dif_white = DiffuseLambert::new(colors::WHITE);
         let sphere = Sphere::new(Point3::new(0.0, 0.0, -0.3), 0.5, Arc::new(mat_dif_white));
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
-        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(sphere.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_some(),
             "Ray should have hit sphere but didn't.")
     }
 
@@ -312,7 +326,11 @@ mod tests {
             Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &Vec3::J);
-        assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(plane.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_some(),
             "Ray should have hit plane but didn't.")
     }
 
@@ -325,7 +343,11 @@ mod tests {
             Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &(Vec3::J + Vec3::I));
-        assert!(plane.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(plane.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_none(),
             "Ray shouldn't have hit plane but did.")
     }
 
@@ -339,7 +361,11 @@ mod tests {
             Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &-Vec3::K);
-        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY).is_some(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_some(),
             "Ray should have hit triangle but didn't.")
     }
 
@@ -353,7 +379,11 @@ mod tests {
             Arc::new(mat_dif_white)
         );
         let ray = Ray::new(&Vec3::O, &(Vec3::J - Vec3::K));
-        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY).is_none(),
+        let mut rand = Rand {
+            dist: rand::distributions::Uniform::from(0.0..1.0),
+            rng: rand::thread_rng()
+        };
+        assert!(tri.is_hit(&ray, 0.0, f64::INFINITY, &mut rand).is_none(),
             "Ray shouldn't have hit triangle but did.")
     }
 }

@@ -7,6 +7,7 @@ use crate::vec::{ Coord, Point3, Vec3, Ray };
 
 pub type HittableRefs = Vec<Arc<dyn BoundedHittable>>;
 
+#[derive(Debug)]
 pub struct Hit {
     pub point: Point3,
     pub normal: Vec3,
@@ -16,6 +17,8 @@ pub struct Hit {
 }
 
 impl Hit {
+    pub const FP_OFFSET: f64 = 0.001;
+
     pub fn new(point: Point3, normal: Vec3, t: f64, outer: bool, material: Arc<dyn Material>) -> Hit {
         Hit {
             point, t, outer, material,
@@ -158,7 +161,7 @@ pub trait Bounded {
 }
 
 pub trait Hittable {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit>;
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit>;
     fn surface_area(&self) -> f64 { 0.0 }
 }
 
@@ -181,8 +184,8 @@ impl HittableGroup {
 }
 
 impl Hittable for HittableGroup {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        self.accel.is_hit(ray, t_min, t_max)
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
+        self.accel.is_hit(ray, t_min, t_max, rand)
     }
 
     fn surface_area(&self) -> f64 {

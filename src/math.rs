@@ -6,6 +6,7 @@ use std::ops;
 
 const FLOAT_THRESHOLD: f64 = 0.0001;
 
+#[derive(Debug)]
 pub struct Rand {
     pub dist: Uniform<f64>,
     pub rng: ThreadRng

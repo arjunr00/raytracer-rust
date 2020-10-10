@@ -1,5 +1,5 @@
 use super::geom::hit::Hit;
-use super::math::{ Rand, f_clamp };
+use super::math::{ Rand, lerp, f_clamp };
 use super::vec::{ colors, Ray, ColorRGB, Vec3 };
 
 pub trait MaterialBase {
@@ -22,9 +22,10 @@ pub struct Reflective {
 }
 
 #[derive(Debug)]
-pub struct Transparent {
+pub struct Translucent {
     albedo: ColorRGB,
-    ref_index: f64
+    ref_index: f64,
+    roughness: f64
 }
 
 #[derive(Debug)]
@@ -77,13 +78,14 @@ impl MaterialBase for Reflective {
     }
 }
 
-impl Transparent {
+impl Translucent {
     const REF_INDEX_OF_AIR: f64 = 1.0;
 
-    pub fn new(albedo: ColorRGB, ref_index: f64) -> Transparent {
-        Transparent {
+    pub fn new(albedo: ColorRGB, ref_index: f64, roughness: f64) -> Translucent {
+        Translucent {
             albedo,
-            ref_index: if ref_index < 1.0 { 1.0 } else { ref_index }
+            ref_index: if ref_index < 1.0 { 1.0 } else { ref_index },
+            roughness: f_clamp(roughness, 0.0, 1.0)
         }
     }
 
@@ -92,18 +94,23 @@ impl Transparent {
     }
 }
 
-impl Material for Transparent {}
+impl Material for Translucent {}
 
-impl MaterialBase for Transparent {
+impl MaterialBase for Translucent {
     fn scatter(&self, in_ray: &Ray, hit: &Hit, rand: &mut Rand) -> Option<Ray> {
         let refraction_dir =
             if hit.outer {
-                in_ray.dir.refract(&hit.normal, Transparent::REF_INDEX_OF_AIR, self.ref_index, rand)
+                in_ray.dir.refract(&hit.normal, Translucent::REF_INDEX_OF_AIR, self.ref_index, rand)
             } else {
-                in_ray.dir.refract(&hit.normal, self.ref_index, Transparent::REF_INDEX_OF_AIR, rand)
+                in_ray.dir.refract(&hit.normal, self.ref_index, Translucent::REF_INDEX_OF_AIR, rand)
             };
 
-        Some(Ray::new(&hit.point, &refraction_dir))
+        Some(Ray::new(&hit.point,
+                &lerp(
+                    refraction_dir,
+                    &hit.normal + Vec3::random_unit(rand),
+                    self.roughness
+                )))
     }
 
     fn attenuation(&self) -> &ColorRGB {

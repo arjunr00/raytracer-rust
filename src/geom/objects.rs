@@ -15,6 +15,7 @@ use super::primitives::{ Plane, Triangle };
 
 use crate::loader::{ Loader, Polygon };
 use crate::material::Material;
+use crate::math;
 use crate::vec::{ Point3, Ray, Vec3 };
 
 #[derive(Debug)]
@@ -22,6 +23,26 @@ pub struct Prism {
     center: Point3,
     spanning_vecs: (Vec3, Vec3, Vec3),
     primitives: HittableGroup
+}
+
+#[derive(Debug)]
+pub struct Icosahedron {
+    center: Point3,
+    radius: f64,
+    primitives: HittableGroup
+}
+
+#[derive(Debug)]
+pub struct Object {
+    center: Point3,
+    primitives: HittableGroup
+}
+
+#[derive(Debug)]
+pub struct Volume {
+    boundary: Arc<dyn BoundedHittable>,
+    material: Arc<dyn Material>,
+    inv_density: f64
 }
 
 impl Prism {
@@ -62,8 +83,8 @@ impl Prism {
 impl BoundedHittable for Prism {}
 
 impl Hittable for Prism {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        self.primitives.is_hit(ray, t_min, t_max)
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
+        self.primitives.is_hit(ray, t_min, t_max, rand)
     }
 
     fn surface_area(&self) -> f64 {
@@ -75,13 +96,6 @@ impl Bounded for Prism {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
     }
-}
-
-#[derive(Debug)]
-pub struct Icosahedron {
-    center: Point3,
-    radius: f64,
-    primitives: HittableGroup
 }
 
 impl Icosahedron {
@@ -136,8 +150,8 @@ impl Icosahedron {
 impl BoundedHittable for Icosahedron {}
 
 impl Hittable for Icosahedron {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        self.primitives.is_hit(ray, t_min, t_max)
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
+        self.primitives.is_hit(ray, t_min, t_max, rand)
     }
 
     fn surface_area(&self) -> f64 {
@@ -149,12 +163,6 @@ impl Bounded for Icosahedron {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
     }
-}
-
-#[derive(Debug)]
-pub struct Object {
-    center: Point3,
-    primitives: HittableGroup
 }
 
 impl Object {
@@ -221,8 +229,8 @@ impl Object {
 impl BoundedHittable for Object {}
 
 impl Hittable for Object {
-    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<Hit> {
-        self.primitives.is_hit(ray, t_min, t_max)
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
+        self.primitives.is_hit(ray, t_min, t_max, rand)
     }
 
     fn surface_area(&self) -> f64 {
@@ -233,5 +241,62 @@ impl Hittable for Object {
 impl Bounded for Object {
     fn bounding_box(&self) -> AxisAlignedBoundingBox {
         AxisAlignedBoundingBox::union_from_objs(self.primitives.hittables())
+    }
+}
+
+impl Volume {
+    pub fn new(boundary: Arc<dyn BoundedHittable>, density: f64, material: Arc<dyn Material>)
+        -> Volume
+    {
+        Volume {
+            boundary, material,
+            inv_density: 1.0 / density
+        }
+    }
+}
+
+impl BoundedHittable for Volume {}
+
+impl Hittable for Volume {
+    fn is_hit(&self, ray: &Ray, t_min: f64, t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
+        let mut entry_hit = self.boundary.is_hit(ray, -f64::INFINITY, f64::INFINITY, rand)?;
+        let mut exit_hit =
+            match self.boundary.is_hit(ray, entry_hit.t + Hit::FP_OFFSET, f64::INFINITY, rand) {
+                Some(hit) => hit,
+                None => { return Some(entry_hit); }
+            };
+
+        if entry_hit.t < t_min { entry_hit.t = t_min; }
+        if exit_hit.t > t_max { exit_hit.t = t_max; }
+
+        if math::f_geq(entry_hit.t, exit_hit.t) {
+            return None;
+        }
+
+        let entry_exit_dist = exit_hit.t - entry_hit.t;
+        let hit_dist = self.inv_density * -math::rand_f64(rand).log10();
+        if hit_dist > entry_exit_dist {
+            return None
+        }
+
+        let t = entry_hit.t + hit_dist;
+
+        Some(Hit::new(
+            ray.at(t),
+            Vec3::O,
+            t,
+            true,
+            self.material.clone()
+        ))
+    }
+
+    fn surface_area(&self) -> f64 {
+        self.boundary.surface_area()
+    }
+}
+
+impl Bounded for Volume {
+    fn bounding_box(&self) -> AxisAlignedBoundingBox {
+        self.boundary.bounding_box()
     }
 }

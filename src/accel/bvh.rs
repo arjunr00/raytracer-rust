@@ -190,7 +190,7 @@ impl BVH {
 }
 
 impl Hittable for BVH {
-    fn is_hit(&self, ray: &Ray, t_min: f64, mut t_max: f64) -> Option<Hit> {
+    fn is_hit(&self, ray: &Ray, t_min: f64, mut t_max: f64, rand: &mut math::Rand) -> Option<Hit> {
         let root = &self.nodes[self.root];
         let ray_inverse_dir = Vec3::new(
             1.0 / ray.dir[Coord::X],
@@ -222,7 +222,7 @@ impl Hittable for BVH {
                         // Leaf node
                         if let Some((obj_start, obj_end)) = node.object_indices {
                             for i in obj_start..obj_end {
-                                if let Some(obj_hit) = self.objects[i].is_hit(ray, t_min, t_max) {
+                                if let Some(obj_hit) = self.objects[i].is_hit(ray, t_min, t_max, rand) {
                                     t_max = obj_hit.t;
                                     hit = Some(obj_hit);
                                 }
