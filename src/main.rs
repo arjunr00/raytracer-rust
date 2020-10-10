@@ -56,6 +56,10 @@ fn main() {
             eprintln!("Rendering scene 4.");
             render_scene_4();
         },
+        5 => {
+            eprintln!("Rendering scene 5.");
+            render_scene_5();
+        },
         _ => {
             eprintln!("{} is not a valid scene number.", render_opt);
             std::process::exit(1);
@@ -101,6 +105,8 @@ fn render_scene_1(render_type: RenderType) {
         mat_dif_soft_gray.clone()
     );
     let red_ball = Sphere::new(Point3::new(0.6, -0.2, -1.0), 0.3, mat_dif_soft_red.clone());
+    let air_ball = Sphere::new(Point3::new(0.0, 0.0, -1.5), 0.5, mat_dif_soft_gray.clone());
+    let blue_volume_ball = Volume::new(Arc::new(air_ball), 1.0, mat_dif_soft_red.clone());
 
     let world = World::new(vec![
         Arc::new(ground),
@@ -384,9 +390,6 @@ fn render_scene_4() {
 
     let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 1.0, 1.0), 7.0));
 
-    let mat_skin = Arc::new(material::Translucent::new(ColorRGB::new(0.945, 0.760, 0.490), 0.0, 0.5));
-    let mat_volume = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.772, 0.301, 0.301)));
-
     let ground = Plane::new(
         Point3::new(0.0, -0.5, 0.0),
         (1000.0 * Vec3::I, 1000.0 * Vec3::K),
@@ -410,8 +413,6 @@ fn render_scene_4() {
         Camera::new(&camera_focus + Point3::new(10.0, 3.0, -20.0), &camera_focus,
             fov_deg, aperture, out_width, out_height);
 
-    let volume = Arc::new(Volume::new(object.clone(), 0.4, mat_volume.clone()));
-
     let world = World::new(vec![
         Arc::new(ground),
         Arc::new(object)
@@ -426,6 +427,75 @@ fn render_scene_4() {
     let camera_arc = Arc::new(camera);
     let config_arc = Arc::new(config);
     raytracer::write_ppm_threaded(world_arc, camera_arc, "armadillo.ppm", config_arc);
+
+    // Uncomment to watch render live
+    // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);
+}
+
+fn render_scene_5() {
+    let out_width = 640;
+    let out_height = 480;
+    let fov_deg = 60.0;
+    let aperture = 0.0;
+    let samples = 1000;
+    let max_depth = 50;
+
+    let background = |t| {
+        0.01 * colors::SKYBLUE
+    };
+    let config = raytracer::ImageConfig {
+        width: out_width, height: out_height,
+        samples: samples, max_depth: max_depth,
+        background: Arc::new(background)
+    };
+
+    let mat_floor = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.3, 0.5, 0.8)));
+    let mat_light = Arc::new(material::Emissive::new(ColorRGB::new(1.0, 1.0, 1.0), 7.0));
+
+    let mat_skin = Arc::new(material::Translucent::new(ColorRGB::new(0.945, 0.760, 0.490), 0.0, 0.5));
+    let mat_volume = Arc::new(material::DiffuseLambert::new(ColorRGB::new(0.772, 0.301, 0.301)));
+
+    let ground = Plane::new(
+        Point3::new(0.0, -0.5, 0.0),
+        (1000.0 * Vec3::I, 1000.0 * Vec3::K),
+        mat_floor.clone()
+    );
+    let light = Plane::new(
+        Point3::new(0.0, 14.0, 7.0),
+        (2.3 * Vec3::I, 2.3 * (Vec3::J - Vec3::K)),
+        mat_light.clone()
+    );
+
+    let size = 0.04;
+    let object = Arc::new(Object::new(
+        Point3::new(0.0, 7.0, 0.0),
+        size, vec![],
+        &Path::new("models/planck.obj"), mat_skin.clone()
+    ));
+
+    let camera_focus = object.bounding_box().center().clone();
+    let camera =
+        Camera::new(&camera_focus + Point3::new(10.0, 3.0, -20.0), &camera_focus,
+            fov_deg, aperture, out_width, out_height);
+
+    let volume = Arc::new(Volume::new(object.clone(), 0.4, mat_volume.clone()));
+
+    let world = World::new(vec![
+        Arc::new(ground),
+        Arc::new(light),
+        object.clone(),
+        volume.clone()
+    ]);
+
+    // Single-threaded
+    // let mut file = File::create(&Path::new("temp.ppm")).unwrap();
+    // file.write_all(raytracer::create_ppm(&world, &camera, &config).as_bytes()).unwrap();
+
+    // Multi-threaded
+    let world_arc = Arc::new(world);
+    let camera_arc = Arc::new(camera);
+    let config_arc = Arc::new(config);
+    raytracer::write_ppm_threaded(world_arc, camera_arc, "planck.ppm", config_arc);
 
     // Uncomment to watch render live
     // raytracer::write_ppm(&world, &camera, "temp.ppm", &config);

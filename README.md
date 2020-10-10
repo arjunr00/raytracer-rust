@@ -43,6 +43,8 @@ This model, which has 99,976 triangles, took about 19 seconds to render at 640x4
 ![armadillo](examples/armadillo.png)
 
 And here's a few [Cornell box](https://www.graphics.cornell.edu/online/box/data.html) renders, all of which are 512x512 pixels with 10,000 samples per pixels and a maximum of 50 bounces.
+I believe the pronounced lighting on the tops of the walls is because the emissive plane is positioned ever so slightly below the ceiling, and is emitting light on both of its sides.
+
 The first two took ~1 hour and 10 minutes (as opposed to ~1 hour and 35 minutes without the BVH and just over 4 hours and 15 minutes on only one of those cores):
 
 ![cornell](examples/cornell.png)
@@ -53,6 +55,12 @@ This one, with [Lucy and the Stanford bunny](http://graphics.stanford.edu/data/3
 However, to be fair, I was running multiple Chrome tabs as well as attending class over Zoom while rendering this, unlike the other images, so it probably would have been faster if left alone:
 
 ![cornell3](examples/cornell3.png)
+
+This one has a light volumetric fog sitting inside the original box.
+It took around 3 hours and 57 minutes.
+Volumetrics are, at the time of writing, rather computationally intensive, and unoptimized, but I was also watching things in Chrome, so perhaps this is not the most accurate timing:
+
+![cornell4](examples/cornell4.png)
 
 ## How it works
 
